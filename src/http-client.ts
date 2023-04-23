@@ -1,242 +1,105 @@
-import type { ReadStream } from 'fs'
+import { reject, Error, errorCatcher } from './error.js'
 
-import type { AxiosInstance } from 'axios'
-import axios, { AxiosError } from 'axios'
-
-import type { CDN } from './cdn'
-import { endsWithSlash } from './cdn.js'
-import type { CaughtError } from './error.js'
-import { errorCatcher, reject, Error } from './error.js'
-import type { Logger } from './logger'
-import { RetryPromise, createQueue } from './promises.js'
-import type { FileContext, LoadingContext, RelPath } from './types'
-
-type HttpClient = AxiosInstance
-
-interface FileMeta {
-  ArrayNumber: number
-  Checksum: string | null
-  ContentType: string | ''
-  DateCreated: string
-  Guid: string
-  IsDirectory: boolean
-  LastChanged: string
-  Length: number
-  ObjectName: string
-  Path: `/${string}/`
-  ReplicatedZones: string | null
-  ServerId: number
-  StorageZoneId: number
-  StorageZoneName: string
-  UserId: string
+interface HttpClientConfig {
+  baseURL?: string
+  headers?: Record<string, string>
 }
 
-interface PutFileContext {
-  absolutePath: `/${string}`
-  pathname: `./${string}`
-  response: unknown
+interface RequestConfig<D = unknown> extends Omit<RequestInit, 'method' | 'body'> {
+  data?: D
 }
 
-interface BunnyClient {
-  /**
-   * returns the content of a remote directory on the CDN
-   * @param scope a relative path which must start with `./`
-   * and a trailing slash will be automatically added to enforce
-   * it to be a folder
-   * @returns a list of metadata describing files. When there is
-   * no directory it returns an empty list without failing
-   */
-  list: (scope: RelPath) => Promise<FileMeta[]>
-  /**
-   * puts files to remote storage location using `scope` as folder
-   * selector, in the format ` organization / library / version (optional)`
-   * when version is semver compliant it refuses to put twice in the same
-   * place. Due to the API endpoints the requests must be chunked in batches
-   * where the default batch is 25 items strong
-   * @see {@link https://docs.bunny.net/reference/edge-storage-api-limits}
-   * @param scope relative path which must start with `./`
-   * @param pathnames relative path segments which must start with `./`
-   * and the latest identifies the file itself
-   * @param isSemver flag to avoid double push logic on semver folders
-   * @returns
-   */
-  put: (scope: RelPath, pathnames: [LoadingContext, ...LoadingContext[]], isSemver?: boolean | undefined) => Promise<void>
+interface ResponseConfig<T> extends Response {
+  data: T
 }
 
-const successfulPut = {
-  HttpCode: 201,
-  Message: 'File uploaded.',
+interface HttpClient {
+  delete<T = unknown>(url: string, config?: RequestConfig): Promise<ResponseConfig<T>>
+  get<T = unknown>(url: string, config?: RequestConfig): Promise<ResponseConfig<T>>
+  put<T = unknown, D = unknown>(
+    url: string, data?: D, config?: RequestConfig<D>
+  ): Promise<ResponseConfig<T>>
 }
 
-// const failedPut = {
-//   HttpCode: 400,
-//   Message: 'Unable to upload file.',
-// }
+const okHandler = (res: Response) =>
+  (res.ok ? Promise.resolve(res) : reject(Error.ResponseNotOk, 'response not ok', res))
 
-// const unauthorized = {
-//   HttpCode: 401,
-//   Message: 'Unauthorized',
-// }
+const contentTypeHandler = (res: Response) => {
+  const ct = res.headers.get('content-type')?.split(';')[0].trim()
+  switch (ct) {
+  case 'application/json':
+    return Promise.all([
+      res.json().catch(errorCatcher(Error.BodyNotOk, 'response body not ok')),
+      Promise.resolve(res),
+    ])
+  default:
+    return Promise.all([
+      res.text().catch(errorCatcher(Error.BodyNotOk, 'response body not ok')),
+      Promise.resolve(res),
+    ])
+  }
+}
 
-const splitInChunks = (contexts: LoadingContext[], maxChunkSize = 25) => {
-  if (contexts.length <= maxChunkSize) {
-    return [contexts]
+const serializeInput = (data: unknown): BodyInit | null | undefined => {
+  if (typeof data === 'undefined' || data === null) {
+    return data
   }
 
-  return contexts.reduce<LoadingContext[][]>(
-    (chunks, item, index) => {
-      const batchNumber = Math.floor(index / maxChunkSize)
-      const batchIndex = index % maxChunkSize
+  if (typeof data === 'string') {
+    return data
+  }
 
-      if ((chunks[batchNumber] as (LoadingContext[] | undefined)) === undefined) {
-        const newBatch: LoadingContext[] = []
-        newBatch[batchIndex] = item
-        chunks[batchNumber] = newBatch
-      } else {
-        chunks[batchNumber][batchIndex] = item
+  if (data instanceof ReadableStream || data instanceof Blob) {
+    return data
+  }
+
+  if (data instanceof Buffer) {
+    return new Blob([data])
+  }
+}
+
+/**
+ * creates a fetch wrapper with methods GET, PUT, and DELETE
+ * @param {HttpClientConfig} clientConfig allows to preset the baseURL
+ * and headers to include in each call
+ * @returns {HttpClient} an instance of an HttpClient
+ */
+const createHttpClient = (clientConfig: HttpClientConfig): HttpClient => {
+  const clientFetch = <T, D>(url: string, method?: 'GET' | 'PUT' | 'DELETE', { data, ...config }: RequestConfig<D> = {}) =>
+    fetch(
+      new URL(url, clientConfig.baseURL),
+      {
+        ...config,
+        body: serializeInput(data),
+        headers: {
+          ...clientConfig.headers,
+          ...config.headers,
+        },
+        method,
       }
-
-      return chunks
-    },
-    []
-  )
-}
-
-const collectFulfilled = (arr: {fulfilled: PutFileContext[]}[]) =>
-  arr.reduce<PutFileContext[]>((fulfilled, batch) => {
-    fulfilled.push(...batch.fulfilled)
-    return fulfilled
-  }, [])
-
-const collectRejections = (arr: {rejected: CaughtError[]}[]) =>
-  arr.reduce<CaughtError[]>((errors, batch) => {
-    errors.push(...batch.rejected)
-    return errors
-  }, [])
-
-const createClient = (cdn: CDN, logger: Logger, retries?: number): BunnyClient => {
-  // todo
-  const { baseURL: { href: baseURL } } = cdn
-  const httpClient: HttpClient = axios.create({
-    baseURL,
-    headers: {
-      AccessKey: cdn.accessKey,
-    },
-  })
-
-  const list = async (scope: RelPath) =>
-    httpClient.get<FileMeta[]>(cdn.buildUrl(endsWithSlash(scope)).href)
-      .then(({ data }) => data)
-
-  const isEmptyFolder = async (scope: RelPath) => {
-    const items = await list(scope)
-    // client.get(folder)
-    return items.length === 0
-  }
-
-  const putRequest = async (url: URL, fileContext: FileContext) => {
-    let data: Buffer | ReadStream
-    const headers: Record<string, string> = {}
-    if ('checksum' in fileContext) {
-      data = fileContext.buffer
-      headers.Checksum = fileContext.checksum.toUpperCase()
-    } else {
-      data = fileContext
-    }
-
-    return new RetryPromise(
-      async () =>
-        httpClient.put<typeof successfulPut>(
-          url.href,
-          data,
-          {
-            headers: {
-              'Content-Type': 'application/octet-stream',
-              ...headers,
-            },
-            onUploadProgress(progressEvent) {
-              console.log(url.pathname, progressEvent.progress, progressEvent.estimated)
-            },
-          }
-        ),
-      retries
-    ).catch(e => { console.log(e); return Promise.reject(e) })
-  }
-
-  const put = async (scope: RelPath, pathnames: [LoadingContext, ...LoadingContext[]], isSemver = false) => {
-    // checks whether putting a semver folder
-    let isOkToPut = true
-    if (isSemver) {
-      isOkToPut = await isEmptyFolder(scope)
-    }
-
-    // if it is already filled it throws
-    if (!isOkToPut) {
-      return reject(
-        Error.PutOnNonEmptyFolder,
-        `Folder ${scope} is not empty and scoped with semver versioning`,
-        undefined
-      )
-    }
-
-    const putFile = async (ctx: LoadingContext) => {
-      const url = cdn.buildUrl(scope, ctx.pathname)
-      return ctx.loader()
-        .then((buf) => putRequest(url, buf))
-        .then((value) => ({
-          response: value,
-          ...ctx,
-        }))
-        .catch((e) => { console.error(e); return Promise.reject(e) })
-        .catch(errorCatcher(Error.UnableToUploadFile, ctx.pathname))
-    }
-
-    const putChunk = (chunk: LoadingContext[]) =>
-      () => Promise.allSettled(
-        chunk.map(putFile)
-      ).then((results) => {
-          interface ReducedSettler {
-            fulfilled: PutFileContext[]
-            rejected: CaughtError[]
-          }
-
-          return results.reduce<ReducedSettler>((all, result) => {
-            result.status === 'fulfilled'
-              ? all.fulfilled.push(result.value)
-              : all.rejected.push(result.reason as CaughtError)
-            return all
-          }, { fulfilled: [], rejected: [] })
-      })
-
-    const chunks = splitInChunks(pathnames)
-    return createQueue(chunks.map(putChunk)).flush()
-      .then((settler) => {
-        const fulfilled = collectFulfilled(settler)
-        const errors = collectRejections(settler)
-
-        logger.table(
-          fulfilled.map(({ pathname }) => ({ file: pathname, status: 'OK' }))
-        )
-
-        if (errors.length !== 0) {
-          console.table(
-            errors.map(({ message }) => ({ file: message, status: 'KO' }))
-          )
-
-          return reject(
-            Error.UnableToUploadFile,
-            `Some files for ${scope} could not be uploaded`,
-            errors
-          )
-        }
-      })
-  }
+    )
+      .catch(errorCatcher(Error.ResponseNotOk, 'response not ok'))
+      .then(okHandler)
+      .then(contentTypeHandler)
+      .then(([resData, res]) => Object.assign(res, { data: resData as T }))
 
   return {
-    list,
-    put,
+    delete(url, config) {
+      return clientFetch(url, 'DELETE', config)
+    },
+    get(url, config) {
+      return clientFetch(url, 'GET', config)
+    },
+    put(url, data, config) {
+      return clientFetch(
+        url,
+        'PUT',
+        {
+          ...config,
+          data,
+        })
+    },
   }
 }
 
-export type { HttpClient }
-export { createClient, AxiosError as HttpError }
+export { createHttpClient }

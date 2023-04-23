@@ -1,7 +1,7 @@
-import type { HttpError } from './http-client'
-
 enum Error {
   ReadFile,
+  ResponseNotOk,
+  BodyNotOk,
   JSONParseString,
   NoPackageJsonFiles,
   NoPackageJsonNameScope,
@@ -9,17 +9,15 @@ enum Error {
   NothingToDo,
   OutOfScopeFile,
   PutOnNonEmptyFolder,
-  UnableToUploadFile
+  UnableToUploadFile,
+  UnableToDeleteFile,
+  UnableToGetFile,
 }
 
 interface CaughtError {
   cause?: unknown
   error: Error
   message: string
-}
-
-interface UnableToUploadFile extends CaughtError {
-  cause: HttpError | UnableToUploadFile[]
 }
 
 class MysteryBoxError extends TypeError implements CaughtError {
@@ -40,6 +38,6 @@ const errorCatcher = (error: Error, message?: string) =>
 const thrower = (error: Error, message?: string) =>
   (cause: unknown) => { throw new MysteryBoxError(error, message, { cause }) }
 
-export type { CaughtError, UnableToUploadFile }
+export type { CaughtError }
 export { Error, reject, thrower, errorCatcher }
 export default MysteryBoxError

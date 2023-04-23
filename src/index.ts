@@ -1,8 +1,10 @@
-import { Argument, Command } from 'commander'
+import { Command } from 'commander'
 
 import packageJson from '../package.json' assert {type: 'json'}
 
+import deleteFn from './delete.js'
 import { absoluteResolve } from './glob.js'
+import list from './list.js'
 import logger from './logger.js'
 import publish from './publish.js'
 import type { Global } from './types'
@@ -28,7 +30,7 @@ const main = async (argv: string[], global: Global) => {
         + 'when not specified package.json `name` is parsed against /^@([^/]+)\\//',
     )
     .option(
-      '--override-version <string>',
+      '--override-version [string]',
       'version that will postfix scope, if semver it won\'t allow to PUT twice '
         + 'the same scope / name / version. Useful to push `stable` or `latest` tags'
     )
@@ -48,7 +50,15 @@ const main = async (argv: string[], global: Global) => {
   program.command('list')
     .description('Retrieves the content of a folder in the CDN storage')
     .requiredOption('-k, --access-key <string>', 'the API access key')
-    .addArgument(new Argument('<dir>').argRequired())
+    .argument('<dir>')
+    .action(list.bind(config))
+
+  program.command('delete')
+    .description('Retrieves the content of a folder in the CDN storage')
+    .requiredOption('-k, --access-key <string>', 'the API access key')
+    .option('--avoid-throwing', 'in case of failure does not fail with error code')
+    .argument('<dir>')
+    .action(deleteFn.bind(config))
 
   return program.parseAsync(argv, { from: 'node' })
 }

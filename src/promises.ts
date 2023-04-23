@@ -61,4 +61,39 @@ const createQueue = <T>(fns: AsyncFunction<T>[]) => {
   }
 }
 
+// const createRetry = <T>(callback: AsyncFunction<T>, maxRetries = 2) => {
+//   const queue = Promise.resolve()
+//   let retries = 0
+//   let done = false
+
+//   const
+//   queue.then(() =>
+//     callback()
+//       .then()
+//       .catch()
+//   ).finally(() => {
+//     retries += 1
+//     if(retries < maxRetries) {
+
+//     }
+//   })
+
+//   while (retries < maxRetries || !done) {
+//     callback()
+//       .then((val) => {
+//         done = true
+//         return val
+//       })
+//       .catch((err) => {
+//         if (retries < maxRetries) {
+
+//         }
+//       })
+//       .finally(() => {
+//         retries += 1
+//       })
+//   }
+// }
+
+
 export { RetryPromise, createQueue }

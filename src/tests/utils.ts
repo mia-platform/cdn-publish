@@ -37,8 +37,13 @@ const loggerStub = Object.assign(logger, {
     console.table(tabularData, properties),
 })
 
+const sha256 = (content: Buffer) => crypto
+  .createHash('sha256')
+  .update(content)
+  .digest('hex')
+
 const wait = (timeout = 1000) => async <T>(value: T) =>
   new Promise<T>((resolve) => setTimeout(() => resolve(value), timeout))
 
 export type { Temp }
-export { createTmpDir, createResources, noop, loggerStub, wait }
+export { createTmpDir, createResources, noop, loggerStub, sha256, wait }

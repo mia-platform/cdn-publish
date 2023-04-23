@@ -4,10 +4,10 @@ import fs from 'fs'
 import type { IPackageJson } from '@ts-type/package-dts'
 import semverRegex from 'semver-regex'
 
+import { createBunnyClient } from './bunny-client.js'
 import { createCdnContext } from './cdn.js'
 import { Error, reject, thrower } from './error.js'
 import { absoluteResolve, getFiles } from './glob.js'
-import { createClient } from './http-client.js'
 import type { AbsPath, Config, LoadingContext, RelPath } from './types'
 
 // interface PublishContext extends Config {
@@ -17,7 +17,7 @@ import type { AbsPath, Config, LoadingContext, RelPath } from './types'
 interface Options {
   accessKey: string
   checksum?: boolean
-  overrideVersion?: string
+  overrideVersion?: string | boolean
   project: string
   scope?: string
 }
@@ -83,9 +83,13 @@ const getScope = (input: string | undefined, ctx: PackageJsonContext) => {
     )(undefined)
 }
 
-const getVersion = (input: string | undefined, ctx: PackageJsonContext) => {
-  if (input !== undefined) {
+const getVersion = (input: string | boolean | undefined, ctx: PackageJsonContext) => {
+  if (input !== undefined && typeof input === 'string') {
     return { isSemver: semverRegex().test(input), version: input }
+  }
+
+  if (typeof input === 'boolean') {
+    return
   }
 
   const { content: { version } } = ctx
@@ -98,6 +102,7 @@ const getVersion = (input: string | undefined, ctx: PackageJsonContext) => {
 }
 
 const getPrefix = (scope: string, version: string | undefined): RelPath => {
+  console.log(version)
   if (version === undefined) {
     return `./${scope}`
   }
@@ -111,19 +116,17 @@ const sha256 = (content: Buffer) => crypto
   .digest('hex')
 
 
-const makeLoader = (file: string, checksum: boolean) => async () => {
-  if (checksum) {
-    const buffer = await fs.promises.readFile(file)
-    return {
+const makeLoader = (file: string, shouldCalcChecksum: boolean) => async () => {
+  const buffer = await fs.promises.readFile(file)
+  return shouldCalcChecksum
+    ? {
       buffer,
       checksum: sha256(buffer),
     }
-  }
-
-  return fs.createReadStream(file, 'binary')
+    : buffer
 }
 
-const getLoaders = (workingDir: AbsPath, files: Set<AbsPath>, checksum: boolean) => {
+const getLoaders = (workingDir: AbsPath, files: Set<AbsPath>, shouldUseChecksum: boolean) => {
   const arrayOfFiles = Array.from(files.values())
   if (!isNotEmpty(arrayOfFiles)) {
     return thrower(Error.NothingToDo, 'No file selected to PUT')(undefined)
@@ -131,7 +134,7 @@ const getLoaders = (workingDir: AbsPath, files: Set<AbsPath>, checksum: boolean)
 
   const mapper = (file: AbsPath): LoadingContext => ({
     absolutePath: file,
-    loader: makeLoader(file, checksum),
+    loader: makeLoader(file, shouldUseChecksum),
     pathname: `.${file.substring(workingDir.length)}` as RelPath,
   })
 
@@ -144,25 +147,29 @@ const getLoaders = (workingDir: AbsPath, files: Set<AbsPath>, checksum: boolean)
 
 async function publish(this: Config, matchers: string[], opts: Options) {
   const { workingDir, logger } = this
-  const { accessKey, checksum = false, project, scope: inputScope, overrideVersion } = opts
+  const {
+    accessKey,
+    checksum: shouldUseChecksum = false,
+    project,
+    scope: inputScope,
+    overrideVersion,
+  } = opts
   const cdn = createCdnContext(accessKey, {})
 
   const pkgContext = await getPackageJson(workingDir, project)
   const allMatchers = getMatchers(matchers, pkgContext)
   const files = getFiles(workingDir, allMatchers)
-  const loadingContexts = getLoaders(workingDir, files, checksum)
+  const loadingContexts = getLoaders(workingDir, files, shouldUseChecksum)
   const scope = getScope(inputScope, pkgContext)
-  const version = getVersion(overrideVersion, pkgContext)
+  const { isSemver, version } = getVersion(overrideVersion, pkgContext) ?? {}
 
-  const { put } = createClient(cdn, logger)
+  const client = createBunnyClient(cdn, logger)
 
-  await put(
-    getPrefix(scope, version?.version),
+  return client.put(
+    getPrefix(scope, version),
     loadingContexts,
-    version?.isSemver
+    isSemver
   )
-
-  return Promise.resolve()
 }
 
 export type { Config }

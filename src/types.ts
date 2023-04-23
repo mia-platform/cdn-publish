@@ -1,5 +1,3 @@
-import type { ReadStream } from 'fs'
-
 import type { Logger } from './logger'
 
 type RelPath = `./${string}`
@@ -14,7 +12,7 @@ interface Config {
   workingDir: AbsPath
 }
 
-type FileContext = ReadStream | {buffer: Buffer; checksum: string}
+type FileContext = Buffer | {buffer: Buffer; checksum: string}
 
 interface LoadingContext {
   absolutePath: AbsPath

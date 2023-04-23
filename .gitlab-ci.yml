@@ -113,8 +113,6 @@ build-cli:
   script:
     - yarn build
 
-".docker-job":
-
 build-container:
   stage: build
   needs:

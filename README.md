@@ -1,4 +1,4 @@
-# magic-box
+# mystery box
 
 ## CLI proposal
 

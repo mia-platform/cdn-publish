@@ -8,7 +8,7 @@ import type { SinonSandbox } from 'sinon'
 import { createSandbox } from 'sinon'
 import sinonChai from 'sinon-chai'
 
-import { createQueue } from '../promises'
+import { createQueue } from '../promises.js'
 
 interface Context extends MochaContext {
   currentTest?: MochaContext['currentTest'] & {sandbox?: SinonSandbox}

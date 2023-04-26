@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { describe, it } from 'mocha'
 
-import { createCdnContext } from '../cdn'
+import { createCdnContext } from '../cdn.js'
 import MysteryBoxError from '../error'
 
 describe('get all files from glob tests', () => {

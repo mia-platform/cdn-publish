@@ -2,10 +2,10 @@ import { expect } from 'chai'
 import type { Context as MochaContext } from 'mocha'
 import { afterEach, describe, it } from 'mocha'
 
-import { getFiles } from '../glob'
+import { getFiles } from '../glob.js'
 
 import type { Temp } from './utils'
-import { createResources, createTmpDir } from './utils'
+import { createResources, createTmpDir } from './utils.js'
 
 describe('get all files from glob tests', () => {
   interface Context extends MochaContext {

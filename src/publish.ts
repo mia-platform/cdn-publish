@@ -102,7 +102,6 @@ const getVersion = (input: string | boolean | undefined, ctx: PackageJsonContext
 }
 
 const getPrefix = (scope: string, version: string | undefined): RelPath => {
-  console.log(version)
   if (version === undefined) {
     return `./${scope}`
   }

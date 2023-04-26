@@ -24,7 +24,6 @@ async function list(this: Config, dir: string, opts: Options) {
 
   const client = createBunnyClient(cdn, logger)
 
-  console.log(dir, normalize(dir))
   return client.list(normalize(dir))
     .then((filelist) => {
       logger.table(filelist.map(({ Path, ObjectName, IsDirectory }) => ({ dir: Path, file: ObjectName, type: IsDirectory ? 'd' : 'f' })))

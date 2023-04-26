@@ -8,7 +8,7 @@ import type { SinonSandbox } from 'sinon'
 import { createSandbox } from 'sinon'
 import sinonChai from 'sinon-chai'
 
-import { createQueue, RetryPromise } from '../promises'
+import { createQueue } from '../promises'
 
 interface Context extends MochaContext {
   currentTest?: MochaContext['currentTest'] & {sandbox?: SinonSandbox}
@@ -18,90 +18,7 @@ interface Context extends MochaContext {
 use(chaiAsPromised)
 use(sinonChai)
 
-describe('retries test', () => {
-  beforeEach(function (this: Context) {
-    if (this.currentTest) {
-      this.currentTest.sandbox = createSandbox()
-    }
-  })
-
-  afterEach(function (this: Context) {
-    this.currentTest?.sandbox?.restore()
-  })
-
-  it('should succed at first attempt', async function (this: Context) {
-    if (this.test?.sandbox === undefined) {
-      throw new TypeError('Cannot find sandbox')
-    }
-
-    const { test: { sandbox } } = this
-    const value = crypto.randomUUID()
-    const stub = sandbox.stub<[], Promise<string>>()
-
-    stub.onCall(0).resolves(value)
-
-    await expect(new RetryPromise<string>(stub)).to.eventually.be.equal(value)
-    expect(stub).to.be.calledOnce
-  })
-
-  it('should succed at second attempt', async function (this: Context) {
-    if (this.test?.sandbox === undefined) {
-      throw new TypeError('Cannot find sandbox')
-    }
-
-    const { test: { sandbox } } = this
-    const value = crypto.randomUUID()
-    const stub = sandbox.stub<[], Promise<string>>()
-
-    stub.onCall(0).rejects('error')
-    stub.onCall(1).resolves(value)
-
-    await expect(new RetryPromise<string>(stub)).to.eventually.be.equal(value)
-    expect(stub).to.be.calledTwice
-  })
-
-  it('should fail at third attempt', async function (this: Context) {
-    if (this.test?.sandbox === undefined) {
-      throw new TypeError('Cannot find sandbox')
-    }
-
-    const { test: { sandbox } } = this
-    const value = crypto.randomUUID()
-    const stub = sandbox.stub<[], Promise<string>>()
-
-    stub.onCall(0).rejects('error')
-    stub.onCall(1).rejects('error')
-    stub.onCall(2).resolves(value)
-
-    const promise = new RetryPromise<string>(stub)
-    await expect(promise)
-      .to.eventually.be.rejectedWith(Error)
-    await expect(promise.catch(() => true)).to.eventually.fulfilled.and.be.true
-    expect(stub).to.be.calledTwice
-  })
-
-  it('should fail after custom number of retries', async function (this: Context) {
-    if (this.test?.sandbox === undefined) {
-      throw new TypeError('Cannot find sandbox')
-    }
-
-    const { test: { sandbox } } = this
-    const value = crypto.randomUUID()
-    const stub = sandbox.stub<[], Promise<string>>()
-
-    stub.onCall(0).rejects('error')
-    stub.onCall(1).rejects('error')
-    stub.onCall(2).rejects('error')
-    stub.onCall(3).rejects('error')
-    stub.onCall(4).resolves(value)
-
-    await expect(new RetryPromise<string>(stub, 4))
-      .to.eventually.be.rejectedWith(Error)
-    expect(stub).to.have.callCount(4)
-  })
-})
-
-describe('retries test', () => {
+describe('create queue tests', () => {
   beforeEach(function (this: Context) {
     if (this.currentTest) {
       this.currentTest.sandbox = createSandbox()

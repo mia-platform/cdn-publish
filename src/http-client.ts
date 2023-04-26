@@ -1,4 +1,4 @@
-import { reject, Error, errorCatcher } from './error.js'
+import MysteryBoxError, { reject, Error, errorCatcher } from './error.js'
 
 interface HttpClientConfig {
   baseURL?: string
@@ -16,8 +16,8 @@ interface ResponseConfig<T> extends Response {
 interface HttpClient {
   delete<T = unknown>(url: string, config?: RequestConfig): Promise<ResponseConfig<T>>
   get<T = unknown>(url: string, config?: RequestConfig): Promise<ResponseConfig<T>>
-  put<T = unknown, D = unknown>(
-    url: string, data?: D, config?: RequestConfig<D>
+  put<T = unknown>(
+    url: string, data?: Buffer, config?: RequestConfig<Buffer>
   ): Promise<ResponseConfig<T>>
 }
 
@@ -41,21 +41,15 @@ const contentTypeHandler = (res: Response) => {
 }
 
 const serializeInput = (data: unknown): BodyInit | null | undefined => {
-  if (typeof data === 'undefined' || data === null) {
-    return data
-  }
-
-  if (typeof data === 'string') {
-    return data
-  }
-
-  if (data instanceof ReadableStream || data instanceof Blob) {
-    return data
+  if (typeof data === 'undefined') {
+    return
   }
 
   if (data instanceof Buffer) {
     return new Blob([data])
   }
+
+  throw new MysteryBoxError(Error.BodyNotOk, 'cannot parse this type of body', undefined)
 }
 
 /**
@@ -65,7 +59,7 @@ const serializeInput = (data: unknown): BodyInit | null | undefined => {
  * @returns {HttpClient} an instance of an HttpClient
  */
 const createHttpClient = (clientConfig: HttpClientConfig): HttpClient => {
-  const clientFetch = <T, D>(url: string, method?: 'GET' | 'PUT' | 'DELETE', { data, ...config }: RequestConfig<D> = {}) =>
+  const clientFetch = <T>(url: string, method?: 'GET' | 'PUT' | 'DELETE', { data, ...config }: RequestConfig = {}) =>
     fetch(
       new URL(url, clientConfig.baseURL),
       {

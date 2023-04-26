@@ -1,8 +1,11 @@
+import { exit } from 'process'
+
 import { Command } from 'commander'
 
 import packageJson from '../package.json' assert {type: 'json'}
 
 import deleteFn from './delete.js'
+import MysteryBoxError from './error.js'
 import { absoluteResolve } from './glob.js'
 import list from './list.js'
 import logger from './logger.js'
@@ -63,4 +66,26 @@ const main = async (argv: string[], global: Global) => {
   return program.parseAsync(argv, { from: 'node' })
 }
 
-main(process.argv, globalThis).catch(console.error)
+main(process.argv, globalThis)
+  .then(() => {
+    logger.info('😁, all good!')
+    return exit(0)
+  })
+  .catch(async (err) => {
+    if (err instanceof MysteryBoxError && err.cause instanceof Response) {
+      switch (err.cause.status) {
+      case 401:
+        logger.error('HTTP response returned UNAUTHORIZED. Either missing or wrong access key in option -k or --access-key')
+        break
+      default:
+        await err.cause.text().then((text) => {
+          logger.error(err, err.message, text)
+        })
+        break
+      }
+    } else {
+      logger.error('Unhandled error', err instanceof TypeError ? err.message : err)
+    }
+
+    return exit(1)
+  })

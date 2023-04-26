@@ -2,9 +2,9 @@
 /* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable no-nested-ternary */
 import fs from 'fs'
-import { mock } from 'node:test'
 import path from 'path'
 
+import { mock } from 'node:test'
 
 import { createTmpDir } from './utils.js'
 

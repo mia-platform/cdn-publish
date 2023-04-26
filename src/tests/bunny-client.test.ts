@@ -1,12 +1,12 @@
 
 /* eslint-disable @typescript-eslint/require-await */
 import fs from 'fs'
-import { mock } from 'node:test'
 
 import { expect, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import type { Context as MochaContext } from 'mocha'
 import { after, before, describe, it } from 'mocha'
+import { mock } from 'node:test'
 
 import { createBunnyClient } from '../bunny-client.js'
 import { createCdnContext } from '../cdn.js'

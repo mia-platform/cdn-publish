@@ -35,7 +35,6 @@ async function deleteFn(this: Config, matcher: string, opts: Options) {
 
   const client = createBunnyClient(cdn, logger)
   const { dir, filename } = normalize(matcher)
-  console.log(dir, filename)
 
   return client.delete(dir, filename, avoidThrowing)
 }

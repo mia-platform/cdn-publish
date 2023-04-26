@@ -1,19 +1,20 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable @typescript-eslint/require-await */
 import fs from 'fs'
-import { mock } from 'node:test'
 
 import { expect, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { beforeEach, describe, it } from 'mocha'
+import { mock } from 'node:test'
 
 import { createBunnyClient } from '../bunny-client.js'
 import { createCdnContext } from '../cdn.js'
 import MysteryBoxError from '../error.js'
 import { absoluteResolve } from '../glob.js'
-import type { LoadingContext } from '../types.js'
+import { createHttpClient } from '../http-client.js'
+import type { FileContext, LoadingContext } from '../types'
 
-import { createResources, createTmpDir, loggerStub } from './utils.js'
+import { createResources, createTmpDir, loggerStub, noop, sha256 } from './utils.js'
 
 use(chaiAsPromised)
 
@@ -117,6 +118,30 @@ describe('http client tests', () => {
 
     await expect(client.list(path))
       .to.eventually.be.fulfilled.and.have.members([])
+  })
+
+  it('should fail on loading a non buffer data', async () => {
+    const resource = 'package.json'
+    const tmpCtx = await createTmpDir(createResources([resource]))
+
+    const accessKey = 'secret'
+    const cdn = createCdnContext(accessKey)
+    const client = createBunnyClient(cdn, loggerStub)
+
+    await expect(client.put('./__test', [
+      {
+        absolutePath: absoluteResolve(tmpCtx.name, resource),
+        loader(this) {
+          return Promise.resolve({
+            buffer: fs.createReadStream(this.absolutePath) as unknown as Buffer,
+            checksum: 'undefined',
+          })
+        },
+        pathname: `./${resource}`,
+      },
+    ])).to.eventually.be.rejectedWith(MysteryBoxError)
+
+    await tmpCtx.cleanup()
   })
 
   it('should put some files', async () => {
@@ -280,55 +305,54 @@ describe('http client tests', () => {
   })
 })
 
-describe('e2e DONT USE', () => {
-  // it.skip('e2e DONT USE', async function (this) {
-  //   this.timeout(100000)
+describe.skip('e2e DONT USE', () => {
+  it('e2e DONT USE', async function (this) {
+    this.timeout(100000)
 
-  //   const resources = Array(100).fill(0).map((_, idx) => `file${idx}.txt`)
-  //   const tmpCtx = await createTmpDir(createResources(resources))
+    const resources = Array(100).fill(0).map((_, idx) => `file${idx}.txt`)
+    const tmpCtx = await createTmpDir(createResources(resources))
 
-  //   const accessKey = process.env.ACCESS_KEY
-  //   if (!accessKey) {
-  //     throw new TypeError('must set an ACCESS_KEY')
-  //   }
-  //   const cdn = createCdnContext(accessKey)
-  //   const client = createBunnyClient(cdn, loggerStub, 1)
+    const accessKey = process.env.ACCESS_KEY
+    if (!accessKey) {
+      throw new TypeError('must set an ACCESS_KEY')
+    }
+    const cdn = createCdnContext(accessKey)
+    const client = createBunnyClient(cdn, loggerStub)
 
-  //   const loaders = resources.map((name) => ({
-  //     absolutePath: absoluteResolve(tmpCtx.name, name),
-  //     loader(this): Promise<FileContext> {
-  //       return fs.promises.readFile(this.absolutePath)
-  //         .then((buffer) => ({
-  //           buffer,
-  //           checksum: sha256(buffer),
-  //         }))
-  //     },
-  //     pathname: `./${name}`,
-  //   } as LoadingContext)) as [LoadingContext, ...LoadingContext[]]
+    const loaders = resources.map((name) => ({
+      absolutePath: absoluteResolve(tmpCtx.name, name),
+      loader(this): Promise<FileContext> {
+        return fs.promises.readFile(this.absolutePath)
+          .then((buffer) => ({
+            buffer,
+            checksum: sha256(buffer),
+          }))
+      },
+      pathname: `./${name}`,
+    } as LoadingContext)) as [LoadingContext, ...LoadingContext[]]
 
-  //   await client.put('./backoffice/__test/files', loaders)
+    await client.put('./backoffice/__test/files', loaders)
 
-  //   await tmpCtx.cleanup().then(noop)
-  // })
+    await tmpCtx.cleanup().then(noop)
+  })
 
-  // it.skip('e2e DONT USE', async function (this) {
-  //   this.timeout(100000)
-  //   // nock.enableNetConnect()
+  it('e2e DONT USE', async function (this) {
+    this.timeout(100000)
+    // nock.enableNetConnect()
 
-  //   const accessKey = process.env.ACCESS_KEY
-  //   if (!accessKey) {
-  //     throw new TypeError('must set an ACCESS_KEY')
-  //   }
+    const accessKey = process.env.ACCESS_KEY
+    if (!accessKey) {
+      throw new TypeError('must set an ACCESS_KEY')
+    }
 
-  //   const cdn = createCdnContext(accessKey)
-  //   const client = createHttpClient({
-  //     baseURL: cdn.baseURL.href,
-  //     headers: {
-  //       AccessKey: accessKey,
-  //     },
-  //   })
+    const cdn = createCdnContext(accessKey)
+    const client = createHttpClient({
+      baseURL: cdn.baseURL.href,
+      headers: {
+        AccessKey: accessKey,
+      },
+    })
 
-  //   await client.delete('./backoffice/__test/files/')
-  //     .then(console.log)
-  // })
+    await client.delete('./backoffice/__test/files/')
+  })
 })

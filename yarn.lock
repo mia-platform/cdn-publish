@@ -777,10 +777,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^18.16.1":
+"@types/node@npm:*":
   version: 18.16.1
   resolution: "@types/node@npm:18.16.1"
   checksum: 799026b949a48993cba7c9b81b2eabfdfb34c880744cb44c1c990fbedc9e315f3634d126eb2cf9a6e0795577c01016e2326d98565bef695ada9d363fadeb6946
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^18.16.3":
+  version: 18.16.3
+  resolution: "@types/node@npm:18.16.3"
+  checksum: 816b39d45b05ebdc6f362b630970df3f6d82f71d418a2555353522f4eeeb078fa201de5299f02c09a09faa975e43b2745fe19c263d44069f87ddf37d6c37b717
   languageName: node
   linkType: hard
 
@@ -3788,7 +3795,7 @@ __metadata:
     "@types/chai": ^4.3.4
     "@types/chai-as-promised": ^7.1.5
     "@types/mocha": ^10.0.1
-    "@types/node": ^18.16.1
+    "@types/node": ^18.16.3
     "@types/sinon": ^10.0.14
     "@types/sinon-chai": ^3.2.9
     "@types/temp": ^0.9.1

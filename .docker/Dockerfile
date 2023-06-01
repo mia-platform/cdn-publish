@@ -16,6 +16,8 @@ LABEL name="mystery-box" \
 
 COPY ./dist/index.cjs /usr/local/bin/mb
 
+RUN chmod 755 /usr/local/bin/mb
+
 WORKDIR /home/node
 
 COPY ./LICENSE ./LICENSE

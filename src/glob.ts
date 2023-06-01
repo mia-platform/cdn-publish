@@ -13,6 +13,8 @@ const absoluteJoin = (dir: AbsPath, file: string) =>
 const absoluteResolve = (dir: string, ...paths: string[]) =>
   path.resolve(dir, ...paths) as AbsPath
 
+const absoluteWorkingDir = (file: string) => path.dirname(file) as AbsPath
+
 const getAllFilesFromDir = (dirPath: AbsPath): Set<AbsPath> =>
   readdirSync(dirPath).reduce((arrayOfFiles, file) => {
     const filePath = absoluteJoin(dirPath, file)
@@ -72,5 +74,5 @@ const getFiles = (workingDir: AbsPath, matchers: [string, ...string[]]) =>
   }, new Set<AbsPath>())
 
 export type { AbsPath }
-export { getFiles, absoluteResolve }
+export { getFiles, absoluteResolve, absoluteWorkingDir }
 

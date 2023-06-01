@@ -7,7 +7,7 @@ import semverRegex from 'semver-regex'
 import { createBunnyClient } from './bunny-client.js'
 import { createCdnContext } from './cdn.js'
 import { Error, reject, thrower } from './error.js'
-import { absoluteResolve, getFiles } from './glob.js'
+import { absoluteResolve, getFiles, absoluteWorkingDir } from './glob.js'
 import type { AbsPath, Config, LoadingContext, RelPath } from './types'
 
 // interface PublishContext extends Config {
@@ -25,6 +25,7 @@ interface Options {
 interface PackageJsonContext {
   content: IPackageJson
   path: AbsPath
+  workingDir: AbsPath
 }
 
 
@@ -36,9 +37,11 @@ const getPackageJson = async (workingDir: AbsPath, project: string) => {
   const textContent = await fs.promises.readFile(path, 'utf-8')
     .catch((err) => reject(Error.ReadFile, `Cannot read ${path}`, err))
 
+  const packageJsonWorkingDir = absoluteWorkingDir(path)
+
   try {
     const content = JSON.parse(textContent) as IPackageJson
-    return { content, path } as PackageJsonContext
+    return { content, path, workingDir: packageJsonWorkingDir } as PackageJsonContext
   } catch (err) {
     return reject(
       Error.JSONParseString,
@@ -157,8 +160,8 @@ async function publish(this: Config, matchers: string[], opts: Options) {
 
   const pkgContext = await getPackageJson(workingDir, project)
   const allMatchers = getMatchers(matchers, pkgContext)
-  const files = getFiles(workingDir, allMatchers)
-  const loadingContexts = getLoaders(workingDir, files, shouldUseChecksum)
+  const files = getFiles(pkgContext.workingDir, allMatchers)
+  const loadingContexts = getLoaders(pkgContext.workingDir, files, shouldUseChecksum)
   const scope = getScope(inputScope, pkgContext)
   const { isSemver, version } = getVersion(overrideVersion, pkgContext) ?? {}
 

@@ -91,10 +91,6 @@ const getVersion = (input: string | boolean | undefined, ctx: PackageJsonContext
     return { isSemver: semverRegex().test(input), version: input }
   }
 
-  if (typeof input === 'boolean') {
-    return
-  }
-
   const { content: { version } } = ctx
   if (version !== undefined) {
     return {
@@ -167,8 +163,14 @@ async function publish(this: Config, matchers: string[], opts: Options) {
 
   const client = createBunnyClient(cdn, logger)
 
+  const rootDir = getPrefix(scope, version)
+
+  if (overrideVersion !== undefined) {
+    await client.delete(rootDir)
+  }
+
   return client.put(
-    getPrefix(scope, version),
+    rootDir,
     loadingContexts,
     isSemver
   )

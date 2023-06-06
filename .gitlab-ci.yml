@@ -152,6 +152,7 @@ build-container:
           --storage-path /var/run/docker.sock \
           ${REMOTE_IMAGE_NAME}:${DOCKER_TAG}
       fi
+    - docker login -u ${NEXUS_USER} -p ${NEXUS_TOKEN} ${NEXUS_URL}
     - |
       if [ "$CI_PIPELINE_SOURCE" != "merge_request_event" ]; then
         docker push ${REMOTE_IMAGE_NAME}:${DOCKER_TAG}

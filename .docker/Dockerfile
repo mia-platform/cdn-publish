@@ -26,6 +26,4 @@ RUN echo "mystery-box: $COMMIT_SHA" >> ./commit.sha
 
 USER node
 
-ENTRYPOINT [ "/bin/sh" ]
-
 HEALTHCHECK NONE

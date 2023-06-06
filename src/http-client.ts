@@ -1,3 +1,5 @@
+import { setTimeout } from 'timers/promises'
+
 import MysteryBoxError, { reject, Error, errorCatcher } from './error.js'
 
 interface HttpClientConfig {
@@ -59,8 +61,9 @@ const serializeInput = (data: unknown): BodyInit | null | undefined => {
  * @returns {HttpClient} an instance of an HttpClient
  */
 const createHttpClient = (clientConfig: HttpClientConfig): HttpClient => {
-  const clientFetch = <T>(url: string, method?: 'GET' | 'PUT' | 'DELETE', { data, ...config }: RequestConfig = {}) =>
-    fetch(
+  async function clientFetch(url: string, method?: 'GET' | 'PUT' | 'DELETE', { data, ...config }: RequestConfig = {}, retries = 3, delay = 1000):
+      Promise<Response> {
+    return fetch(
       new URL(url, clientConfig.baseURL),
       {
         ...config,
@@ -71,20 +74,30 @@ const createHttpClient = (clientConfig: HttpClientConfig): HttpClient => {
         },
         method,
       }
-    )
-      .catch(errorCatcher(Error.ResponseNotOk, 'response not ok'))
-      .then(okHandler)
-      .then(contentTypeHandler)
-      .then(([resData, res]) => Object.assign(res, { data: resData as T }))
+    ).catch(async (err) => {
+      if (retries <= 0) {
+        return errorCatcher(Error.ResponseNotOk, 'response not ok')(err)
+      }
+      await setTimeout(delay)
+      // eslint-disable-next-line no-plusplus, no-param-reassign
+      return clientFetch(url, method, { data, ...config }, --retries, delay)
+    })
+  }
 
   return {
-    delete(url, config) {
+    async delete<T = unknown>(url: string, config: RequestConfig) {
       return clientFetch(url, 'DELETE', config)
+        .then(okHandler)
+        .then(contentTypeHandler)
+        .then(([resData, res]) => Object.assign(res, { data: resData as T }))
     },
-    get(url, config) {
+    async get<T = unknown>(url: string, config: RequestConfig) {
       return clientFetch(url, 'GET', config)
+        .then(okHandler)
+        .then(contentTypeHandler)
+        .then(([resData, res]) => Object.assign(res, { data: resData as T }))
     },
-    put(url, data, config) {
+    async put<T = unknown>(url: string, data?: Buffer, config?: RequestConfig<Buffer>) {
       return clientFetch(
         url,
         'PUT',
@@ -92,6 +105,9 @@ const createHttpClient = (clientConfig: HttpClientConfig): HttpClient => {
           ...config,
           data,
         })
+        .then(okHandler)
+        .then(contentTypeHandler)
+        .then(([resData, res]) => Object.assign(res, { data: resData as T }))
     },
   }
 }

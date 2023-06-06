@@ -16,6 +16,8 @@ LABEL name="mystery-box" \
 
 COPY ./dist/index.cjs /usr/local/bin/mb
 
+RUN chmod 755 /usr/local/bin/mb
+
 WORKDIR /home/node
 
 COPY ./LICENSE ./LICENSE
@@ -23,7 +25,5 @@ COPY ./LICENSE ./LICENSE
 RUN echo "mystery-box: $COMMIT_SHA" >> ./commit.sha
 
 USER node
-
-ENTRYPOINT [ "/bin/sh" ]
 
 HEALTHCHECK NONE

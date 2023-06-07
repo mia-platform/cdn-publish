@@ -312,9 +312,9 @@ describe.skip('e2e DONT USE', () => {
     const resources = Array(100).fill(0).map((_, idx) => `file${idx}.txt`)
     const tmpCtx = await createTmpDir(createResources(resources))
 
-    const accessKey = process.env.ACCESS_KEY
+    const accessKey = process.env.STORAGE_ACCESS_KEY
     if (!accessKey) {
-      throw new TypeError('must set an ACCESS_KEY')
+      throw new TypeError('must set an STORAGE_ACCESS_KEY')
     }
     const cdn = createCdnContext(accessKey)
     const client = createBunnyClient(cdn, loggerStub)
@@ -340,9 +340,9 @@ describe.skip('e2e DONT USE', () => {
     this.timeout(100000)
     // nock.enableNetConnect()
 
-    const accessKey = process.env.ACCESS_KEY
+    const accessKey = process.env.STORAGE_ACCESS_KEY
     if (!accessKey) {
-      throw new TypeError('must set an ACCESS_KEY')
+      throw new TypeError('must set an STORAGE_ACCESS_KEY')
     }
 
     const cdn = createCdnContext(accessKey)

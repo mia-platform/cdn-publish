@@ -17,7 +17,7 @@ describe.skip('ftp tests', () => {
     const client = new ftp.Client()
     await client.access({
       host: 'storage.bunnycdn.com',
-      password: process.env.ACCESS_KEY,
+      password: process.env.STORAGE_ACCESS_KEY,
       secure: true,
       user: 'mia-platform-test',
     })

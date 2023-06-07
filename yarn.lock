@@ -3825,7 +3825,7 @@ __metadata:
     ts-node: ^10.9.1
     typescript: ^5.0.4
   bin:
-    mystery-box: ./dist/index.cjs
+    mb: ./dist/index.cjs
   languageName: unknown
   linkType: soft
 

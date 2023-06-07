@@ -40,12 +40,17 @@ results which must be available to the cdn release job/step.
 
 ==============> **TODO**
 
-_Mystery Box_ can be invoked as a standalone binary from `npm` or `yarn`
+_Mystery Box_ can be invoked as a standalone binary from `npm`
+by installing on your global npm bin store
 
 ```shell
-npx ??/mystery-box [options] [command]
-# or
-yarn dlx ??/mystery-box [options] [command]
+npm install -g ??/mystery-box
+```
+
+and then
+
+```shell
+mb [options] [command]
 ```
 
 ### GitLab job

@@ -14,13 +14,13 @@ LABEL name="mystery-box" \
       eu.mia-platform.url="https://www.mia-platform.eu" \
       eu.mia-platform.version=${VERSION}
 
-COPY ./dist/index.cjs /usr/local/bin/mb
+WORKDIR /usr/src/app
 
-RUN chmod 755 /usr/local/bin/mb
-
-WORKDIR /home/node
-
+COPY ./dist/index.cjs ./dist/index.cjs
+COPY ./package.json ./package.json
 COPY ./LICENSE ./LICENSE
+
+RUN npm i -g .
 
 RUN echo "mystery-box: $COMMIT_SHA" >> ./commit.sha
 

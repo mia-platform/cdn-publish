@@ -14,7 +14,9 @@
     }
   ],
   "type": "module",
-  "bin": "./dist/index.cjs",
+  "bin": {
+    "mb": "./dist/index.cjs"
+  },
   "files": [
     "dist",
     ".docker",

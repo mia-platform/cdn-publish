@@ -6,7 +6,7 @@ import { mock } from 'node:test'
 import { expect, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import type { Context as MochaContext } from 'mocha'
-import { after, before, describe, it } from 'mocha'
+import { afterEach, beforeEach, describe, it } from 'mocha'
 
 import { createBunnyClient } from '../bunny-client.js'
 import { createCdnContext } from '../cdn.js'
@@ -26,12 +26,12 @@ use(chaiAsPromised)
 const index = '<!DOCTYPE html><html></html>'
 
 describe('bunny cdn client', () => {
-  before(async function (this: Context) {
+  beforeEach(async function (this: Context) {
     mock.restoreAll()
     this.cleanup = await createServer()
   })
 
-  after(async function (this: Context) {
+  afterEach(async function (this: Context) {
     return this.cleanup?.()
   })
 
@@ -174,7 +174,7 @@ describe('bunny cdn client', () => {
     const client = createBunnyClient(cdn, loggerStub)
 
     await expect(
-      client.delete('./__test/1.0.0/', './index.html')
+      client.delete('./__test/1.0.0/', './notExistingFile.html')
     ).to.eventually.be.rejected.and.satisfies((error: unknown) => {
       if (!(error instanceof MysteryBoxError)) {
         return false
@@ -193,7 +193,7 @@ describe('bunny cdn client', () => {
     const client = createBunnyClient(cdn, loggerStub)
 
     await expect(
-      client.delete('./__test/1.0.0/', './index.html', true)
+      client.delete('./__test/1.0.0/', './notExistingFile.html', true)
     ).to.eventually.be.fulfilled
   })
 

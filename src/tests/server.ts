@@ -141,7 +141,8 @@ const createServer = async () => {
     const createDir = (filepath: string) => fs.mkdirSync(path.join(tmpCtx.name, path.dirname(filepath)), { recursive: true })
     const writeFile = (filepath: string, file: string) => fs.writeFileSync(path.join(tmpCtx.name, filepath), file)
     const isDir = (filepath: string) => fs.lstatSync(path.join(tmpCtx.name, filepath)).isDirectory()
-    const fileExists = (filepath: string) => fs.existsSync(path.join(tmpCtx.name, filepath))
+    const filepathExists = (filepath: string) => fs.existsSync(path.join(tmpCtx.name, filepath))
+    const deleteFilepath = (filepath: string) => fs.rmSync(path.join(tmpCtx.name, filepath), { recursive: true })
     const readDir = (filepath: string) => {
       try {
         const basePath = path.join(tmpCtx.name, filepath)
@@ -170,7 +171,7 @@ const createServer = async () => {
         }
 
         if (headers.Accept === '*/*') {
-          if (fileExists(href)) {
+          if (filepathExists(href)) {
             return new Response(
               getFile(href),
               { headers: { ...headers200, 'Content-Type': 'text/plain' }, status: 200 }
@@ -185,19 +186,16 @@ const createServer = async () => {
 
     // delete
     if (method === 'DELETE') {
-      if (
-        (
-          href.match(/__test\/file(0|1)\.txt$/)
-          || href.match(/__test\/0\.0\.0\/index\.html$/)
-        )
-         && headers?.AccessKey === accessKey
-      ) {
-        return new Response(
-          JSON.stringify(responseDelete200), { headers: headers200, status: 200 }
-        )
+      if (headers?.AccessKey === accessKey) {
+        if (filepathExists(href)) {
+          deleteFilepath(href)
+          return new Response(
+            JSON.stringify(responseDelete200), { headers: headers200, status: 200 }
+          )
+        }
+        return res404
       }
-
-      return res404
+      return res401
     }
 
     // put

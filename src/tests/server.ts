@@ -1,5 +1,5 @@
 /* eslint-disable no-sync */
-/* eslint-disable @typescript-eslint/require-await */
+
 /* eslint-disable no-nested-ternary */
 import fs from 'fs'
 import { mock } from 'node:test'
@@ -95,62 +95,23 @@ const stringifyUrl = (url: URL | RequestInfo) => (
 
 const accessKey = 'secret'
 
-const files = [
-  {
-    ArrayNumber: 0,
-    Checksum: null,
-    ContentType: '',
-    DateCreated: '',
-    Guid: '',
-    IsDirectory: true,
-    LastChanged: '',
-    Length: 0,
-    ObjectName: '',
-    Path: '/__test/file0.txt',
-    ReplicatedZones: null,
-    ServerId: 0,
-    StorageZoneId: 0,
-    StorageZoneName: '',
-    UserId: '',
-  },
-  {
-    ArrayNumber: 0,
-    Checksum: null,
-    ContentType: '',
-    DateCreated: '',
-    Guid: '',
-    IsDirectory: true,
-    LastChanged: '',
-    Length: 0,
-    ObjectName: '',
-    Path: '/__test/file1.txt',
-    ReplicatedZones: null,
-    ServerId: 0,
-    StorageZoneId: 0,
-    StorageZoneName: '',
-    UserId: '',
-  },
-]
-
-const tripleZero = [
-  {
-    ArrayNumber: 0,
-    Checksum: null,
-    ContentType: '',
-    DateCreated: '',
-    Guid: '',
-    IsDirectory: true,
-    LastChanged: '',
-    Length: 0,
-    ObjectName: '',
-    Path: '/__test/0.0.0/index.html',
-    ReplicatedZones: null,
-    ServerId: 0,
-    StorageZoneId: 0,
-    StorageZoneName: '',
-    UserId: '',
-  },
-]
+const baseFile = {
+  ArrayNumber: 0,
+  Checksum: null,
+  ContentType: '',
+  DateCreated: '',
+  Guid: '',
+  IsDirectory: true,
+  LastChanged: '',
+  Length: 0,
+  ObjectName: '',
+  Path: '/__test/file0.txt',
+  ReplicatedZones: null,
+  ServerId: 0,
+  StorageZoneId: 0,
+  StorageZoneName: '',
+  UserId: '',
+}
 
 const createServer = async () => {
   /**
@@ -169,13 +130,31 @@ const createServer = async () => {
   })
 
 
-  mock.method(global, 'fetch', async (url: URL | RequestInfo, config: RequestInit = {}) => {
+  mock.method(global, 'fetch', async (url: URL | RequestInfo, config: RequestInit = { }) => {
     const stringifiedUrl = stringifyUrl(url)
     const href = stringifiedUrl.match(/(?<href>\/__test\/.*)$/)?.groups?.href ?? undefined
     const { method = 'GET' } = config
     const res404 = new Response(JSON.stringify(response404), { headers: headers404, status: 404 })
+    const res401 = new Response(JSON.stringify(response401), { headers: headers401, status: 401 })
     const headers = config.headers as Record<string, string> | undefined
     const getFile = (filepath: string) => fs.readFileSync(path.join(tmpCtx.name, filepath))
+    const createDir = (filepath: string) => fs.mkdirSync(path.join(tmpCtx.name, path.dirname(filepath)), { recursive: true })
+    const writeFile = (filepath: string, file: string) => fs.writeFileSync(path.join(tmpCtx.name, filepath), file)
+    const isDir = (filepath: string) => fs.lstatSync(path.join(tmpCtx.name, filepath)).isDirectory()
+    const fileExists = (filepath: string) => fs.existsSync(path.join(tmpCtx.name, filepath))
+    const readDir = (filepath: string) => {
+      try {
+        const basePath = path.join(tmpCtx.name, filepath)
+        return fs.readdirSync(basePath)
+          .map(file => ({ ...baseFile,
+            IsDirectory: isDir(path.join(filepath, file)),
+            ObjectName: file,
+            Path: path.join(filepath, file),
+          }))
+      } catch (err) {
+        return []
+      }
+    }
 
     if (href === undefined) {
       return res404
@@ -183,38 +162,25 @@ const createServer = async () => {
 
     // getters
     if (method === 'GET') {
-      if (
-        (
-          href.match(/__test\/file(0|1)\.txt$/)
-          || href.match(/__test\/0\.0\.0\/index\.html$/)
-        )
-         && headers?.AccessKey === accessKey
-         && headers.Accept === '*/*'
-      ) {
-        return new Response(
-          getFile(href),
-          { headers: { ...headers200, 'Content-Type': 'text/plain' }, status: 200 }
-        )
+      if (headers?.AccessKey === accessKey) {
+        if (href.endsWith('/')) {
+          const dirContent = readDir(href)
+          const json = JSON.stringify(dirContent)
+          return new Response(json, { headers: headers200, status: 200 })
+        }
+
+        if (headers.Accept === '*/*') {
+          if (fileExists(href)) {
+            return new Response(
+              getFile(href),
+              { headers: { ...headers200, 'Content-Type': 'text/plain' }, status: 200 }
+            )
+          }
+          return res404
+        }
       }
 
-      if (
-        href.match(/__test(\/0\.0\.0|1\.0\.0)?\/$/)
-         && headers?.AccessKey === accessKey
-         && headers.Accept === '*/*'
-      ) {
-        const dirContent = href.endsWith('__test/')
-          ? JSON.stringify(files)
-          : (
-            href.endsWith('__test/0.0.0/')
-              ? JSON.stringify(tripleZero)
-              : JSON.stringify([])
-          )
-        return new Response(dirContent, { headers: headers200, status: 200 })
-      }
-
-      if (href.endsWith('/')) {
-        return new Response(JSON.stringify([]), { headers: headers200, status: 200 })
-      }
+      return res401
     }
 
     // delete
@@ -236,6 +202,12 @@ const createServer = async () => {
 
     // put
     if (method === 'PUT') {
+      const file = await ((config.body as unknown as Response).text())
+      if (!file) {
+        return new Response(JSON.stringify(response400), { headers: headers400, status: 400 })
+      }
+      createDir(href)
+      writeFile(href, file)
       return new Response(JSON.stringify(response201), { headers: headers201, status: 201 })
     }
 

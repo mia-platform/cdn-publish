@@ -24,10 +24,10 @@ async function list(this: Config, dir: string, opts: Options) {
 
   const client = createBunnyClient(cdn, logger)
 
-  return client.list(normalize(dir))
-    .then((filelist) => {
-      logger.table(filelist.map(({ Path, ObjectName, IsDirectory }) => ({ dir: Path, file: ObjectName, type: IsDirectory ? 'd' : 'f' })))
-    })
+  const filelist = await client.list(normalize(dir))
+  logger.table(filelist.map(({ Path, ObjectName, IsDirectory }) => ({ dir: Path, file: ObjectName, type: IsDirectory ? 'd' : 'f' })))
+
+  return filelist
 }
 
 export type { Config }

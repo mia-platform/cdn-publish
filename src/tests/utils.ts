@@ -33,8 +33,7 @@ const createResources = (paths: string[]) =>
 const noop = () => { /* noop */ }
 
 const loggerStub = Object.assign(logger, {
-  table: (tabularData?: unknown, properties?: string[]) =>
-    console.table(tabularData, properties),
+  table: (_tabularData?: unknown, _properties?: string[]) => ({}),
 })
 
 const sha256 = (content: Buffer) => crypto
@@ -45,5 +44,13 @@ const sha256 = (content: Buffer) => crypto
 const wait = (timeout = 1000) => async <T>(value: T) =>
   new Promise<T>((resolve) => setTimeout(() => resolve(value), timeout))
 
+const createPackageJson = (name: string, version: string, files: string[]) => {
+  return {
+    files,
+    name,
+    version,
+  }
+}
+
 export type { Temp }
-export { createTmpDir, createResources, noop, loggerStub, sha256, wait }
+export { createTmpDir, createResources, noop, loggerStub, sha256, wait, createPackageJson }

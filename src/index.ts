@@ -14,12 +14,12 @@ import type { Global } from './types'
 
 const main = async (argv: string[], global: Global) => {
   const config = { global, logger, workingDir: absoluteResolve('.') }
-  const { name, description, version } = packageJson
+  const { description, version } = packageJson
 
   const program = new Command()
 
   program
-    .name(name)
+    .name('mb')
     .description(description)
     .version(version)
 

@@ -5,7 +5,7 @@ import type { IPackageJson } from '@ts-type/package-dts'
 import semverRegex from 'semver-regex'
 
 import { createCdnContext } from '../cdn.js'
-import { createBunnyClient } from '../clients/bunny-client.js'
+import { createBunnyEdgeStorageClient } from '../clients/bunny-edge-storage.js'
 import { Error, reject, thrower } from '../error.js'
 import { absoluteResolve, getFiles, absoluteWorkingDir } from '../glob.js'
 import type { AbsPath, Config, LoadingContext, RelPath } from '../types'
@@ -161,7 +161,7 @@ async function publish(this: Config, matchers: string[], opts: Options) {
   const scope = getScope(inputScope, pkgContext)
   const { isSemver, version } = getVersion(overrideVersion, pkgContext) ?? {}
 
-  const client = createBunnyClient(cdn, logger)
+  const client = createBunnyEdgeStorageClient(cdn, logger)
 
   const rootDir = getPrefix(scope, version)
 

@@ -6,7 +6,7 @@ import type { Context as MochaContext } from 'mocha'
 import { beforeEach, describe, it, afterEach } from 'mocha'
 
 import { createCdnContext } from '../../src/cdn.js'
-import { createBunnyClient } from '../../src/clients/bunny-client.js'
+import { createBunnyEdgeStorageClient } from '../../src/clients/bunny-edge-storage.js'
 import publish from '../../src/commands/publish.js'
 import { absoluteResolve } from '../../src/glob.js'
 import type { RelPath } from '../../src/types.js'
@@ -78,7 +78,7 @@ function createCdnPath(packageCtx: PackageCtx): RelPath {
 describe('publish project', () => {
   const cliCconfig = { global, logger: loggerStub, workingDir: absoluteResolve('.') }
   const cdn = createCdnContext(accessKey, {})
-  const client = createBunnyClient(cdn, loggerStub)
+  const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
   beforeEach(async function (this: Context) {
     mock.restoreAll()

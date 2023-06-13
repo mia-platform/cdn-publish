@@ -63,7 +63,7 @@
     "eslint-plugin-typescript-sort-keys": "^2.3.0",
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
-    "sinon": "^15.1.0",
+    "sinon": "^15.1.2",
     "sinon-chai": "^3.7.0",
     "source-map-support": "^0.5.21",
     "temp": "^0.9.4",

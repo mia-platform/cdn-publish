@@ -166,7 +166,9 @@ async function publish(this: Config, matchers: string[], opts: Options) {
   const rootDir = getPrefix(scope, version)
 
   if (overrideVersion !== undefined) {
-    await client.delete(rootDir)
+    const filename = undefined
+    const avoidThrowing = true
+    await client.delete(rootDir, filename, avoidThrowing)
   }
 
   return client.put(

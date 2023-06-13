@@ -4,5 +4,5 @@ module.exports = {
     'experimental-specifier-resolution=node',
     'loader=ts-node/esm'
   ],
-  file: ['src/tests/setup.ts']
+  file: ['tests/setup.ts']
 }

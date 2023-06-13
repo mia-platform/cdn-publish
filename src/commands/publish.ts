@@ -4,11 +4,11 @@ import fs from 'fs'
 import type { IPackageJson } from '@ts-type/package-dts'
 import semverRegex from 'semver-regex'
 
-import { createBunnyClient } from './bunny-client.js'
-import { createCdnContext } from './cdn.js'
-import { Error, reject, thrower } from './error.js'
-import { absoluteResolve, getFiles, absoluteWorkingDir } from './glob.js'
-import type { AbsPath, Config, LoadingContext, RelPath } from './types'
+import { createCdnContext } from '../cdn.js'
+import { createBunnyClient } from '../clients/bunny-client.js'
+import { Error, reject, thrower } from '../error.js'
+import { absoluteResolve, getFiles, absoluteWorkingDir } from '../glob.js'
+import type { AbsPath, Config, LoadingContext, RelPath } from '../types'
 
 // interface PublishContext extends Config {
 //   project: string

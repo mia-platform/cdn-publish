@@ -1,6 +1,6 @@
-import { createBunnyClient } from './bunny-client.js'
-import { createCdnContext } from './cdn.js'
-import type { Config } from './types'
+import { createCdnContext } from '../cdn.js'
+import { createBunnyClient } from '../clients/bunny-client.js'
+import type { Config } from '../types.js'
 
 interface Options {
   accessKey: string

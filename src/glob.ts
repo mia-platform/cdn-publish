@@ -5,7 +5,8 @@ import path from 'path'
 import { globSync } from 'glob'
 
 import MysteryBoxError, { Error } from './error.js'
-import type { AbsPath } from './types'
+import type { AbsPath } from './types.js'
+
 
 const absoluteJoin = (dir: AbsPath, file: string) =>
   path.join(dir, file) as AbsPath

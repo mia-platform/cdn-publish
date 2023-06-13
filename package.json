@@ -24,7 +24,7 @@
   ],
   "scripts": {
     "lint": "eslint . --ext .js,.ts",
-    "test": "mocha src/**/*.test.ts",
+    "test": "mocha \"src/**/*.test.ts\"",
     "check-types": "tsc --noEmit",
     "coverage": "cross-env 'NODE_OPTIONS=--experimental-loader @istanbuljs/esm-loader-hook' nyc mocha src/**/*.test.ts",
     "cli:run": "ts-node --esm src/index.ts",

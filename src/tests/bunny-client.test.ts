@@ -6,7 +6,7 @@ import { mock } from 'node:test'
 import { expect, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import type { Context as MochaContext } from 'mocha'
-import { afterEach, beforeEach, describe, it } from 'mocha'
+import { afterEach, beforeEach, before, describe, it } from 'mocha'
 
 import { createBunnyClient } from '../bunny-client.js'
 import { createCdnContext } from '../cdn.js'

@@ -188,6 +188,28 @@ describe('publish project', () => {
 
       await repositoryCtxUpdate.cleanup()
     })
+
+    it('should push a custom senver tag', async () => {
+      const { packageCtx, repositoryCtx } = await createTemporaryRepository()
+      const customVersion = 'latest'
+
+      await expect(publish.bind(cliCconfig)([], {
+        accessKey,
+        overrideVersion: customVersion,
+        project: absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME),
+      })).to.be.eventually.fulfilled
+
+      const cdnRepositoryPath = createCdnPath(packageCtx)
+
+      await expect(client.list(cdnRepositoryPath))
+        .to.eventually.be.fulfilled.and.to.have.length(0)
+
+      const cdnRepositoryPathCustomVer = cdnRepositoryPath.replace(packageCtx.version, customVersion) as RelPath
+      await expect(client.list(cdnRepositoryPathCustomVer))
+        .to.eventually.be.fulfilled.and.to.have.length(2)
+
+      await repositoryCtx.cleanup()
+    })
   })
 })
 

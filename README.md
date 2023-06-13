@@ -68,7 +68,7 @@ cdn-release:
   cache: []
     # 👆 your cache
   script:
-    - mb publish -k "$ACCESS_KEY"
+    - mb publish -k "$STORAGE_ACCESS_KEY"
 ```
 
 ### From source code

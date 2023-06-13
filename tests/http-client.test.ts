@@ -7,12 +7,12 @@ import { expect, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { beforeEach, describe, it } from 'mocha'
 
-import { createBunnyClient } from '../bunny-client.js'
-import { createCdnContext } from '../cdn.js'
-import MysteryBoxError from '../error.js'
-import { absoluteResolve } from '../glob.js'
-import { createHttpClient } from '../http-client.js'
-import type { FileContext, LoadingContext } from '../types'
+import { createCdnContext } from '../src/cdn.js'
+import { createBunnyClient } from '../src/clients/bunny-client.js'
+import { createHttpClient } from '../src/clients/http-client.js'
+import MysteryBoxError from '../src/error.js'
+import { absoluteResolve } from '../src/glob.js'
+import type { FileContext, LoadingContext } from '../src/types.js'
 
 import { createResources, createTmpDir, loggerStub, noop, sha256 } from './utils.js'
 

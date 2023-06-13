@@ -1,10 +1,11 @@
-import type { CDN } from './cdn'
-import { endsWithSlash } from './cdn.js'
-import { errorCatcher, reject, Error } from './error.js'
+import { createQueue } from '..//promises.js'
+import type { CDN } from '../cdn.js'
+import { endsWithSlash } from '../cdn.js'
+import { errorCatcher, reject, Error } from '../error.js'
+import type { Logger } from '../logger'
+import type { FileContext, LoadingContext, RelPath } from '../types'
+
 import { createHttpClient } from './http-client.js'
-import type { Logger } from './logger'
-import { createQueue } from './promises.js'
-import type { FileContext, LoadingContext, RelPath } from './types'
 
 interface FileMeta {
   ArrayNumber: number

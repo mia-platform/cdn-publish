@@ -4,12 +4,12 @@ import { Command } from 'commander'
 
 import packageJson from '../package.json' assert {type: 'json'}
 
-import deleteFn from './delete.js'
+import deleteFn from './commands/delete.js'
+import list from './commands/list.js'
+import publish from './commands/publish.js'
 import MysteryBoxError from './error.js'
 import { absoluteResolve } from './glob.js'
-import list from './list.js'
 import logger from './logger.js'
-import publish from './publish.js'
 import type { Global } from './types'
 
 const main = async (argv: string[], global: Global) => {

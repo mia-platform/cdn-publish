@@ -1,5 +1,6 @@
 import { Error, thrower } from './error.js'
-import type { RelPath } from './types'
+import type { RelPath } from './types.js'
+
 
 interface CDN {
   readonly accessKey: string

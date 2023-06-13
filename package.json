@@ -1,7 +1,7 @@
 {
   "name": "mystery-box",
   "description": "A client for Mia's CDN storage API",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "author": {
     "name": "Mia Platform Core Team",
@@ -24,9 +24,9 @@
   ],
   "scripts": {
     "lint": "eslint . --ext .js,.ts",
-    "test": "mocha \"src/**/*.test.ts\"",
+    "test": "mocha \"tests/**/*.test.ts\"",
     "check-types": "tsc --noEmit",
-    "coverage": "cross-env 'NODE_OPTIONS=--experimental-loader @istanbuljs/esm-loader-hook' nyc mocha src/**/*.test.ts",
+    "coverage": "cross-env 'NODE_OPTIONS=--experimental-loader @istanbuljs/esm-loader-hook' nyc mocha \"tests/**/*.test.ts\"",
     "cli:run": "ts-node --esm src/index.ts",
     "build": "esbuild src/index.ts --bundle --platform=node --outfile=dist/index.cjs --banner:js='#!/usr/bin/env node'"
   },

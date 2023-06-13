@@ -1,6 +1,6 @@
 import { setTimeout } from 'timers/promises'
 
-import MysteryBoxError, { reject, Error, errorCatcher } from './error.js'
+import MysteryBoxError, { reject, Error, errorCatcher } from '../error.js'
 
 interface HttpClientConfig {
   baseURL?: string

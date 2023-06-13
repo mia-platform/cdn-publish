@@ -5,16 +5,15 @@ import chaiAsPromised from 'chai-as-promised'
 import type { Context as MochaContext } from 'mocha'
 import { beforeEach, describe, it, afterEach } from 'mocha'
 
-import { createBunnyClient } from '../../bunny-client.js'
-import { createCdnContext } from '../../cdn.js'
-import { absoluteResolve } from '../../glob.js'
-import publish from '../../publish.js'
-import type { RelPath } from '../../types.js'
+import { createCdnContext } from '../../src/cdn.js'
+import { createBunnyClient } from '../../src/clients/bunny-client.js'
+import publish from '../../src/commands/publish.js'
+import { absoluteResolve } from '../../src/glob.js'
+import type { RelPath } from '../../src/types.js'
 import { testPackagesNamespace } from '../consts.js'
-
-import { accessKey, createServer } from './../server.js'
-import type { Temp } from './../utils.js'
-import { createPackageJson, createResources, createTmpDir, loggerStub } from './../utils.js'
+import { accessKey, createServer } from '../server.js'
+import type { Temp } from '../utils.js'
+import { createPackageJson, createResources, createTmpDir, loggerStub } from '../utils.js'
 
 interface Context extends MochaContext {
   cleanup?: () => void | PromiseLike<void> | Promise<void>

@@ -94,6 +94,7 @@ const stringifyUrl = (url: URL | RequestInfo) => (
 )
 
 const accessKey = 'secret'
+const apiKey = 'secret'
 
 const baseFile = {
   ArrayNumber: 0,
@@ -230,4 +231,4 @@ const bunny = {
   response404,
   responseDelete200,
 }
-export { createServer, indexHash, accessKey, bunny }
+export { createServer, indexHash, accessKey, apiKey, bunny }

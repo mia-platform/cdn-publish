@@ -7,6 +7,7 @@ import packageJson from '../package.json' assert {type: 'json'}
 import deleteFn from './commands/delete.js'
 import list from './commands/list.js'
 import publish from './commands/publish.js'
+import pullzone from './commands/pullzone.js'
 import MysteryBoxError from './error.js'
 import { absoluteResolve } from './glob.js'
 import logger from './logger.js'
@@ -62,6 +63,14 @@ const main = async (argv: string[], global: Global) => {
     .option('--avoid-throwing', 'in case of failure does not fail with error code')
     .argument('<dir>')
     .action(deleteFn.bind(config))
+
+  // Pullzone
+  const pullzoneCmd = program.command('pullzone')
+  pullzoneCmd.command('list')
+    .description('Retrieves all the aviable pull zones')
+    .requiredOption('-k, --access-key <string>', 'the API access key')
+    .option('-s', '--search', 'query string to filter the results')
+    .action(pullzone.bind(config))
 
   return program.parseAsync(argv, { from: 'node' })
 }

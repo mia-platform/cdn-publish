@@ -48,6 +48,16 @@ const headers201 = {
   'transfer-encoding': 'chunked',
 }
 
+// 204
+const headers204 = {
+  'access-control-allow-headers': 'AccessKey, Content-Type',
+  'access-control-allow-methods': 'GET, DELETE, POST, PUT, DESCRIBE',
+  'access-control-allow-origin': '*',
+  connection: 'keep-alive',
+  'content-type': 'application/text',
+  'transfer-encoding': 'chunked',
+}
+
 // 400
 const response400 = ''
   + '<html>'
@@ -222,6 +232,7 @@ const createServer = async () => {
 const bunny = {
   headers200,
   headers201,
+  headers204,
   headers400,
   headers401,
   headers404,

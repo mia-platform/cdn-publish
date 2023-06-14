@@ -17,6 +17,12 @@ interface BunnyApiClient {
      * no pull zone it returns an empty list without failing
      */
     list(search?: string): Promise<PullZoneMeta[]>
+    /**
+     * purge a specific pullzone
+     * @param id the pullzone id
+     * @returns
+     */
+    purgeCache(id: number): Promise<number>
   }
 }
 
@@ -45,10 +51,23 @@ const creatBunnyApiClient = (cdn: CDN, _logger: Logger): BunnyApiClient => {
       .then(({ data }) => data)
   }
 
+  const purgeCache = async (id: number) => httpClient.post(
+    `/pullzone/${id}/purgeCache`,
+    {},
+    {
+      headers: { Accept: 'application/json' },
+    }
+  )
+    .then(({ status }) => status)
+    .catch((err) => {
+      return Promise.reject(err)
+    })
+
 
   return {
     pullZone: {
       list,
+      purgeCache,
     },
   }
 }

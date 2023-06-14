@@ -69,8 +69,14 @@ const main = async (argv: string[], global: Global) => {
   pullzoneCmd.command('list')
     .description('Retrieves all the aviable pull zones')
     .requiredOption('-k, --access-key <string>', 'the API access key')
-    .option('-s', '--search', 'query string to filter the results')
-    .action(pullzone.bind(config))
+    .option('-s, --search <string>', 'query string to filter the results')
+    .action(pullzone.list.bind(config))
+
+  pullzoneCmd.command('purge')
+    .description('Purges all aviables pull zones')
+    .requiredOption('-k, --access-key <string>', 'the API access key')
+    .option('-z, --zone <string>', 'to purge only a specific zone id')
+    .action(pullzone.purgeCache.bind(config))
 
   return program.parseAsync(argv, { from: 'node' })
 }

@@ -18,6 +18,7 @@ interface ResponseConfig<T> extends Response {
 interface HttpClient {
   delete<T = unknown>(url: string, config?: RequestConfig): Promise<ResponseConfig<T>>
   get<T = unknown>(url: string, config?: RequestConfig): Promise<ResponseConfig<T>>
+  post<T = unknown>(url: string, data?: unknown, config?: RequestConfig<Buffer>): Promise<ResponseConfig<T>>
   put<T = unknown>(
     url: string, data?: Buffer, config?: RequestConfig<Buffer>
   ): Promise<ResponseConfig<T>>
@@ -51,6 +52,10 @@ const serializeInput = (data: unknown): BodyInit | null | undefined => {
     return new Blob([data])
   }
 
+  if (typeof data === 'object') {
+    return
+  }
+
   throw new MysteryBoxError(Error.BodyNotOk, 'cannot parse this type of body', undefined)
 }
 
@@ -61,7 +66,7 @@ const serializeInput = (data: unknown): BodyInit | null | undefined => {
  * @returns {HttpClient} an instance of an HttpClient
  */
 const createHttpClient = (clientConfig: HttpClientConfig): HttpClient => {
-  async function clientFetch(url: string, method?: 'GET' | 'PUT' | 'DELETE', { data, ...config }: RequestConfig = {}, retries = 3, delay = 1000):
+  async function clientFetch(url: string, method?: 'GET' | 'PUT' | 'POST' | 'DELETE', { data, ...config }: RequestConfig = {}, retries = 3, delay = 1000):
       Promise<Response> {
     return fetch(
       new URL(url, clientConfig.baseURL),
@@ -93,6 +98,18 @@ const createHttpClient = (clientConfig: HttpClientConfig): HttpClient => {
     },
     async get<T = unknown>(url: string, config: RequestConfig) {
       return clientFetch(url, 'GET', config)
+        .then(okHandler)
+        .then(contentTypeHandler)
+        .then(([resData, res]) => Object.assign(res, { data: resData as T }))
+    },
+    async post<T = unknown>(url: string, data?: Buffer, config?: RequestConfig<Buffer>) {
+      return clientFetch(
+        url,
+        'POST',
+        {
+          ...config,
+          data,
+        })
         .then(okHandler)
         .then(contentTypeHandler)
         .then(([resData, res]) => Object.assign(res, { data: resData as T }))

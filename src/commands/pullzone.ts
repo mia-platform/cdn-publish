@@ -4,7 +4,7 @@ import type { Config } from '../types'
 
 interface OptionsList {
   accessKey: string
-  search: string
+  search?: string
 }
 
 async function list(this: Config, opts: OptionsList) {
@@ -25,7 +25,7 @@ async function list(this: Config, opts: OptionsList) {
 
 interface OptionsPurgeCache {
   accessKey: string
-  zone: number
+  zone?: number
 }
 
 async function purgeCache(this: Config, opts: OptionsPurgeCache) {

@@ -6,15 +6,13 @@ import { createCommand } from './command.js'
 import MysteryBoxError from './error.js'
 import logger from './logger.js'
 
-createCommand(process.argv, globalThis)
+createCommand(process.argv, globalThis, logger)
   .then(() => {
     logger.info('😁, all good!')
     return exit(0)
   })
   .catch(async (err) => {
-    if (err instanceof CommanderError) {
-      logger.error(err.message.replaceAll('\n', ' '))
-    } else if (err instanceof MysteryBoxError && err.cause instanceof Response) {
+    if (err instanceof MysteryBoxError && err.cause instanceof Response) {
       switch (err.cause.status) {
       case 401:
         logger.error('HTTP response returned UNAUTHORIZED. Either missing or wrong access key in option -k or --storage-access-key|--api-key')
@@ -25,6 +23,9 @@ createCommand(process.argv, globalThis)
         })
         break
       }
+    } else if (err instanceof CommanderError) {
+      // Catched by commander library
+      return exit(1)
     } else {
       logger.error('Unhandled error', err instanceof TypeError ? err.message : err)
     }

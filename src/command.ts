@@ -7,7 +7,7 @@ import list from './commands/list.js'
 import publish from './commands/publish.js'
 import pullzone from './commands/pullzone.js'
 import { absoluteResolve } from './glob.js'
-import logger from './logger.js'
+import type { Logger } from './logger.js'
 import type { Global } from './types'
 
 interface PackageJson {
@@ -17,7 +17,7 @@ interface PackageJson {
 
 const packageJSON = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url)).toString()) as PackageJson
 
-export const createCommand = async (argv: string[], global: Global) => {
+export const createCommand = async (argv: string[], global: Global, logger: Logger) => {
   const config = { global, logger, workingDir: absoluteResolve('.') }
   const { description, version } = packageJSON('../package.json')
 
@@ -27,6 +27,9 @@ export const createCommand = async (argv: string[], global: Global) => {
     .name('mb')
     .description(description)
     .version(version)
+    .configureOutput({
+      writeErr: (str) => logger.error(str.replaceAll('\n', ' ')),
+    })
 
   program.command('publish')
     .description('Pushes a folder to the CDN storage')

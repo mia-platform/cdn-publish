@@ -33,6 +33,7 @@ const createResources = (paths: string[]) =>
 const noop = () => { /* noop */ }
 
 const loggerStub = Object.assign(logger, {
+  error: () => ({}),
   table: (_tabularData?: unknown, _properties?: string[]) => ({}),
 })
 

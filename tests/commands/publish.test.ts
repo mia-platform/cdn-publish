@@ -92,28 +92,32 @@ describe('publish project', () => {
     it('-k, --storage-access-key', async () => {
       await expect(createCommand(
         buildCommandArguments(['publish']),
-        global
+        global,
+        loggerStub
       )).to.be.eventually.rejectedWith(cliErrorRequiredOption('-k, --storage-access-key <string>'))
     })
 
     it('-p, --project <string>', async () => {
       await expect(createCommand(
         buildCommandArguments(['publish', '-k', storageAccessKey, '--projectt', 'test']),
-        global
+        global,
+        loggerStub
       )).to.be.eventually.rejectedWith(cliErrorUnknownOption('--projectt', '--project'))
     })
 
     it('--override-version [string]', async () => {
       await expect(createCommand(
         buildCommandArguments(['publish', '-k', storageAccessKey, '--override-versionn']),
-        global
+        global,
+        loggerStub
       )).to.be.eventually.rejectedWith(cliErrorUnknownOption('--override-versionn', '--override-version'))
     })
 
     it('--checksum [string]', async () => {
       await expect(createCommand(
         buildCommandArguments(['publish', '-k', storageAccessKey, '--checksumm']),
-        global
+        global,
+        loggerStub
       )).to.be.eventually.rejectedWith(cliErrorUnknownOption('--checksumm', '--checksum'))
     })
   })
@@ -124,7 +128,8 @@ describe('publish project', () => {
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
       await expect(createCommand(
         buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath]),
-        global
+        global,
+        loggerStub
       )).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)
@@ -140,7 +145,8 @@ describe('publish project', () => {
 
       await expect(createCommand(
         buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath]),
-        global
+        global,
+        loggerStub
       )).to.be.eventually.rejectedWith('No file selected to PUT')
 
       await repositoryCtx.cleanup()
@@ -152,13 +158,15 @@ describe('publish project', () => {
 
       await expect(createCommand(
         buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath]),
-        global
+        global,
+        loggerStub
       )).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)
       await expect(createCommand(
         buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath]),
-        global
+        global,
+        loggerStub
       )).to.be.eventually.rejectedWith(`Folder ${cdnRepositoryPath} is not empty and scoped with semver versioning`)
 
       await repositoryCtx.cleanup()
@@ -172,7 +180,8 @@ describe('publish project', () => {
 
       await expect(createCommand(
         buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath, '--override-version']),
-        global
+        global,
+        loggerStub
       )).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)
@@ -189,7 +198,8 @@ describe('publish project', () => {
 
       await expect(createCommand(
         buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath, '--override-version']),
-        global
+        global,
+        loggerStub
       )).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)
@@ -209,7 +219,8 @@ describe('publish project', () => {
       const projectPathUpdate = absoluteResolve(repositoryCtxUpdate.name, PACKAGE_JSON_FILENAME)
       await expect(createCommand(
         buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPathUpdate, '--override-version']),
-        global
+        global,
+        loggerStub
       )).to.be.eventually.fulfilled
 
       await expect(client.list(cdnRepositoryPath))
@@ -225,7 +236,8 @@ describe('publish project', () => {
 
       await expect(createCommand(
         buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath, '--override-version', customVersion]),
-        global
+        global,
+        loggerStub
       )).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)

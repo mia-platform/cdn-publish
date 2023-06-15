@@ -52,5 +52,25 @@ const createPackageJson = (name: string, version: string, files: string[]) => {
   }
 }
 
+// This is needed because are the first 2 arguments (entrypoint, script)
+// Could be empty for testing purposes
+const buildCommandArguments = (args: string[]) => ['', '', ...args]
+
+const cliErrorUnknownOption = (wrongCmd: string, rightCmd: string) =>
+  `error: unknown option '${wrongCmd}'\n(Did you mean ${rightCmd}?)`
+
+const cliErrorRequiredOption = (cmd: string) => `error: required option '${cmd}' not specified`
+
 export type { Temp }
-export { createTmpDir, createResources, noop, loggerStub, sha256, wait, createPackageJson }
+export {
+  createTmpDir,
+  createResources,
+  noop,
+  loggerStub,
+  sha256,
+  wait,
+  createPackageJson,
+  buildCommandArguments,
+  cliErrorUnknownOption,
+  cliErrorRequiredOption,
+}

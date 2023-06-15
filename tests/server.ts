@@ -172,41 +172,38 @@ const createServer = async () => {
       return res404
     }
 
-    // getters
-    if (method === 'GET') {
-      if (headers?.AccessKey === storageAccessKey) {
-        if (href.endsWith('/')) {
-          const dirContent = readDir(href)
-          const json = JSON.stringify(dirContent)
-          return new Response(json, { headers: headers200, status: 200 })
-        }
-
-        if (headers.Accept === '*/*') {
-          if (filepathExists(href)) {
-            return new Response(
-              getFile(href),
-              { headers: { ...headers200, 'Content-Type': 'text/plain' }, status: 200 }
-            )
-          }
-          return res404
-        }
-      }
-
+    if (headers?.AccessKey !== storageAccessKey) {
       return res401
     }
 
-    // delete
-    if (method === 'DELETE') {
-      if (headers?.AccessKey === storageAccessKey) {
+    // getters
+    if (method === 'GET') {
+      if (href.endsWith('/')) {
+        const dirContent = readDir(href)
+        const json = JSON.stringify(dirContent)
+        return new Response(json, { headers: headers200, status: 200 })
+      }
+
+      if (headers.Accept === '*/*') {
         if (filepathExists(href)) {
-          deleteFilepath(href)
           return new Response(
-            JSON.stringify(responseDelete200), { headers: headers200, status: 200 }
+            getFile(href),
+            { headers: { ...headers200, 'Content-Type': 'text/plain' }, status: 200 }
           )
         }
         return res404
       }
-      return res401
+    }
+
+    // delete
+    if (method === 'DELETE') {
+      if (filepathExists(href)) {
+        deleteFilepath(href)
+        return new Response(
+          JSON.stringify(responseDelete200), { headers: headers200, status: 200 }
+        )
+      }
+      return res404
     }
 
     // put

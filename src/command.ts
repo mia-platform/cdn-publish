@@ -1,6 +1,6 @@
-import { Command } from 'commander'
+import { readFileSync } from 'fs'
 
-import packageJson from '../package.json' assert {type: 'json'}
+import { Command } from 'commander'
 
 import deleteFn from './commands/delete.js'
 import list from './commands/list.js'
@@ -10,9 +10,16 @@ import { absoluteResolve } from './glob.js'
 import logger from './logger.js'
 import type { Global } from './types'
 
+interface PackageJson {
+  description: string
+  version: string
+}
+
+const packageJSON = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url)).toString()) as PackageJson
+
 export const createCommand = async (argv: string[], global: Global) => {
   const config = { global, logger, workingDir: absoluteResolve('.') }
-  const { description, version } = packageJson
+  const { description, version } = packageJSON('../package.json')
 
   const program = new Command()
   program.exitOverride()

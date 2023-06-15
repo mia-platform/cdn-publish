@@ -3,8 +3,8 @@ import { createBunnyEdgeStorageClient } from '../clients/bunny-edge-storage.js'
 import type { Config } from '../types.js'
 
 interface Options {
-  accessKey: string
   avoidThrowing?: boolean
+  storageAccessKey: string
 }
 
 const normalize = (input: string): {dir: `./${string}/`; filename: `./${string}` | undefined} => {
@@ -30,8 +30,8 @@ const normalize = (input: string): {dir: `./${string}/`; filename: `./${string}`
 
 async function deleteFn(this: Config, matcher: string, opts: Options) {
   const { logger } = this
-  const { accessKey, avoidThrowing } = opts
-  const cdn = createCdnContext(accessKey, {})
+  const { storageAccessKey, avoidThrowing } = opts
+  const cdn = createCdnContext(storageAccessKey, {})
 
   const client = createBunnyEdgeStorageClient(cdn, logger)
   const { dir, filename } = normalize(matcher)

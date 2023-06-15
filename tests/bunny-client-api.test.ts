@@ -7,7 +7,7 @@ import { createCdnContext } from '../src/cdn.js'
 import type { PullZoneMeta } from '../src/clients/bunny-api.js'
 import { creatBunnyApiClient } from '../src/clients/bunny-api.js'
 
-import { apiKey, bunny } from './server.js'
+import { accessKey, bunny } from './server.js'
 import { loggerStub } from './utils.js'
 
 const pullzoneMock: PullZoneMeta[] = [
@@ -21,7 +21,7 @@ describe('bunny cdn client', () => {
   })
 
   it('should get a list of pullzones', async () => {
-    const cdn = createCdnContext(apiKey, {
+    const cdn = createCdnContext(accessKey, {
       server: 'https://api.bunny.net/',
       storageZoneName: '',
     })
@@ -42,7 +42,7 @@ describe('bunny cdn client', () => {
   })
 
   it('should get a list of pullzones with search', async () => {
-    const cdn = createCdnContext(apiKey, {
+    const cdn = createCdnContext(accessKey, {
       server: 'https://api.bunny.net/',
       storageZoneName: '',
     })
@@ -63,7 +63,7 @@ describe('bunny cdn client', () => {
   })
 
   it('should purge a specific pullzone', async () => {
-    const cdn = createCdnContext(apiKey, {
+    const cdn = createCdnContext(accessKey, {
       server: 'https://api.bunny.net/',
       storageZoneName: '',
     })

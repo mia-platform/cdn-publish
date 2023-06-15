@@ -15,11 +15,11 @@ import type { AbsPath, Config, LoadingContext, RelPath } from '../types'
 // }
 
 interface Options {
-  accessKey: string
   checksum?: boolean
   overrideVersion?: string | boolean
   project: string
   scope?: string
+  storageAccessKey: string
 }
 
 interface PackageJsonContext {
@@ -146,13 +146,13 @@ const getLoaders = (workingDir: AbsPath, files: Set<AbsPath>, shouldUseChecksum:
 async function publish(this: Config, matchers: string[], opts: Options) {
   const { workingDir, logger } = this
   const {
-    accessKey,
+    storageAccessKey,
     checksum: shouldUseChecksum = false,
     project,
     scope: inputScope,
     overrideVersion,
   } = opts
-  const cdn = createCdnContext(accessKey, {})
+  const cdn = createCdnContext(storageAccessKey, {})
 
   const pkgContext = await getPackageJson(workingDir, project)
   const allMatchers = getMatchers(matchers, pkgContext)

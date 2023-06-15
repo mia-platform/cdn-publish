@@ -11,7 +11,7 @@ import publish from '../../src/commands/publish.js'
 import { absoluteResolve } from '../../src/glob.js'
 import type { RelPath } from '../../src/types.js'
 import { testPackagesNamespace } from '../consts.js'
-import { accessKey, createServer } from '../server.js'
+import { storageAccessKey, createServer } from '../server.js'
 import type { Temp } from '../utils.js'
 import { createPackageJson, createResources, createTmpDir, loggerStub } from '../utils.js'
 
@@ -77,7 +77,7 @@ function createCdnPath(packageCtx: PackageCtx): RelPath {
 
 describe('publish project', () => {
   const cliCconfig = { global, logger: loggerStub, workingDir: absoluteResolve('.') }
-  const cdn = createCdnContext(accessKey, {})
+  const cdn = createCdnContext(storageAccessKey, {})
   const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
   beforeEach(async function (this: Context) {
@@ -93,8 +93,8 @@ describe('publish project', () => {
     it('should push empty senver package', async () => {
       const { packageCtx, repositoryCtx } = await createTemporaryRepository()
       await expect(publish.bind(cliCconfig)([], {
-        accessKey,
         project: absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME),
+        storageAccessKey,
       })).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)
@@ -108,8 +108,8 @@ describe('publish project', () => {
       const { repositoryCtx } = await createTemporaryRepository({ files: ['notExistingFile.js'] })
 
       await expect(publish.bind(cliCconfig)([], {
-        accessKey,
         project: absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME),
+        storageAccessKey,
       })).to.be.eventually.rejectedWith('No file selected to PUT')
 
       await repositoryCtx.cleanup()
@@ -119,14 +119,14 @@ describe('publish project', () => {
       const { packageCtx, repositoryCtx } = await createTemporaryRepository()
 
       await expect(publish.bind(cliCconfig)([], {
-        accessKey,
         project: absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME),
+        storageAccessKey,
       })).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)
       await expect(publish.bind(cliCconfig)([], {
-        accessKey,
         project: absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME),
+        storageAccessKey,
       })).to.be.eventually.rejectedWith(`Folder ${cdnRepositoryPath} is not empty and scoped with semver versioning`)
 
       await repositoryCtx.cleanup()
@@ -138,9 +138,9 @@ describe('publish project', () => {
       const { packageCtx, repositoryCtx } = await createTemporaryRepository()
 
       await expect(publish.bind(cliCconfig)([], {
-        accessKey,
         overrideVersion: true,
         project: absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME),
+        storageAccessKey,
       })).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)
@@ -157,9 +157,9 @@ describe('publish project', () => {
       })
 
       await expect(publish.bind(cliCconfig)([], {
-        accessKey,
         overrideVersion: true,
         project: absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME),
+        storageAccessKey,
       })).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)
@@ -177,9 +177,9 @@ describe('publish project', () => {
       })
 
       await expect(publish.bind(cliCconfig)([], {
-        accessKey,
         overrideVersion: true,
         project: absoluteResolve(repositoryCtxUpdate.name, PACKAGE_JSON_FILENAME),
+        storageAccessKey,
       })).to.be.eventually.fulfilled
 
       await expect(client.list(cdnRepositoryPath))
@@ -193,9 +193,9 @@ describe('publish project', () => {
       const customVersion = 'latest'
 
       await expect(publish.bind(cliCconfig)([], {
-        accessKey,
         overrideVersion: customVersion,
         project: absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME),
+        storageAccessKey,
       })).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)

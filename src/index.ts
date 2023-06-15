@@ -26,7 +26,7 @@ const main = async (argv: string[], global: Global) => {
 
   program.command('publish')
     .description('Pushes a folder to the CDN storage')
-    .requiredOption('-k, --access-key <string>', 'the API access key')
+    .requiredOption('-k, --storage-access-key <string>', 'the key to access to edge storage API')
     .option('-p, --project <string>', 'location of the package.json file', 'package.json')
     .option(
       '-s, --scope <string>',
@@ -53,13 +53,13 @@ const main = async (argv: string[], global: Global) => {
 
   program.command('list')
     .description('Retrieves the content of a folder in the CDN storage')
-    .requiredOption('-k, --access-key <string>', 'the API access key')
+    .requiredOption('-k, --storage-access-key <string>', 'the key to access to edge storage API')
     .argument('<dir>')
     .action(list.bind(config))
 
   program.command('delete')
     .description('Retrieves the content of a folder in the CDN storage')
-    .requiredOption('-k, --access-key <string>', 'the API access key')
+    .requiredOption('-k, --storage-access-key <string>', 'the key to access to edge storage API')
     .option('--avoid-throwing', 'in case of failure does not fail with error code')
     .argument('<dir>')
     .action(deleteFn.bind(config))
@@ -68,13 +68,13 @@ const main = async (argv: string[], global: Global) => {
   const pullzoneCmd = program.command('pullzone')
   pullzoneCmd.command('list')
     .description('Retrieves all the aviable pull zones')
-    .requiredOption('-k, --access-key <string>', 'the API access key')
+    .requiredOption('-k, --access-key <string>', 'the key to access to bunny API')
     .option('-s, --search <string>', 'query string to filter the results')
     .action(pullzone.list.bind(config))
 
   pullzoneCmd.command('purge')
     .description('Purges all aviables pull zones')
-    .requiredOption('-k, --access-key <string>', 'the API access key')
+    .requiredOption('-k, --access-key <string>', 'the key to access to bunny API')
     .option('-z, --zone <string>', 'to purge only a specific zone id')
     .action(pullzone.purgeCache.bind(config))
 
@@ -90,7 +90,7 @@ main(process.argv, globalThis)
     if (err instanceof MysteryBoxError && err.cause instanceof Response) {
       switch (err.cause.status) {
       case 401:
-        logger.error('HTTP response returned UNAUTHORIZED. Either missing or wrong access key in option -k or --access-key')
+        logger.error('HTTP response returned UNAUTHORIZED. Either missing or wrong access key in option -k or --storage-access-key|--api-key')
         break
       default:
         await err.cause.text().then((text) => {

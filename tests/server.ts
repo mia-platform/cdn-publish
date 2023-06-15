@@ -103,8 +103,8 @@ const stringifyUrl = (url: URL | RequestInfo) => (
     )
 )
 
+const storageAccessKey = 'secret'
 const accessKey = 'secret'
-const apiKey = 'secret'
 
 const baseFile = {
   ArrayNumber: 0,
@@ -174,7 +174,7 @@ const createServer = async () => {
 
     // getters
     if (method === 'GET') {
-      if (headers?.AccessKey === accessKey) {
+      if (headers?.AccessKey === storageAccessKey) {
         if (href.endsWith('/')) {
           const dirContent = readDir(href)
           const json = JSON.stringify(dirContent)
@@ -197,7 +197,7 @@ const createServer = async () => {
 
     // delete
     if (method === 'DELETE') {
-      if (headers?.AccessKey === accessKey) {
+      if (headers?.AccessKey === storageAccessKey) {
         if (filepathExists(href)) {
           deleteFilepath(href)
           return new Response(
@@ -242,4 +242,4 @@ const bunny = {
   response404,
   responseDelete200,
 }
-export { createServer, indexHash, accessKey, apiKey, bunny }
+export { createServer, indexHash, storageAccessKey, accessKey, bunny }

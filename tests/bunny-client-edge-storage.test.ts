@@ -25,7 +25,7 @@ use(chaiAsPromised)
 
 const index = '<!DOCTYPE html><html></html>'
 
-describe('bunny cdn client', () => {
+describe('bunny edge storage cdn client', () => {
   beforeEach(async function (this: Context) {
     mock.restoreAll()
     this.cleanup = await createServer()

@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs'
 
+import type IPackageJson from '@ts-type/package-dts'
 import { Command } from 'commander'
 
 import deleteFn from './commands/delete.js'
@@ -10,16 +11,11 @@ import { absoluteResolve } from './glob.js'
 import type { Logger } from './logger.js'
 import type { Global } from './types'
 
-interface PackageJson {
-  description: string
-  version: string
-}
-
-const packageJSON = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url)).toString()) as PackageJson
+const packageJSON = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url)).toString()) as IPackageJson
 
 export const createCommand = async (argv: string[], global: Global, logger: Logger) => {
   const config = { global, logger, workingDir: absoluteResolve('.') }
-  const { description, version } = packageJSON('../package.json')
+  const { description = '', version = '' } = packageJSON('../package.json')
 
   const program = new Command()
   program.exitOverride()
@@ -79,6 +75,8 @@ export const createCommand = async (argv: string[], global: Global, logger: Logg
 
   // Pullzone
   const pullzoneCmd = program.command('pullzone')
+    .description('All pull zone related sub commands')
+
   pullzoneCmd.command('list')
     .description('Retrieves all the aviable pull zones')
     .requiredOption('-k, --access-key <string>', 'the key to access to bunny API')

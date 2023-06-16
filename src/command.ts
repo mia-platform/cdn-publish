@@ -28,7 +28,7 @@ export const createCommand = async (argv: string[], global: Global, logger: Logg
     .description(description)
     .version(version)
     .configureOutput({
-      writeErr: (str) => logger.error(str.replaceAll('\n', ' ')),
+      writeErr: (str) => logger.log(str),
     })
 
   program.command('publish')

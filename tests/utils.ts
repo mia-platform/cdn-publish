@@ -34,6 +34,7 @@ const noop = () => { /* noop */ }
 
 const loggerStub = Object.assign(logger, {
   error: () => ({}),
+  log: () => ({}),
   table: (_tabularData?: unknown, _properties?: string[]) => ({}),
 })
 

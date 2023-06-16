@@ -1,9 +1,9 @@
-import { createQueue } from '..//promises.js'
 import type { CDN } from '../cdn.js'
 import { endsWithSlash } from '../cdn.js'
 import { errorCatcher, reject, Error } from '../error.js'
-import type { Logger } from '../logger'
-import type { FileContext, LoadingContext, RelPath } from '../types'
+import type { Logger } from '../logger.js'
+import { createQueue } from '../promises.js'
+import type { FileContext, LoadingContext, RelPath } from '../types.js'
 
 import { createHttpClient } from './http-client.js'
 
@@ -25,7 +25,7 @@ interface FileMeta {
   UserId: string
 }
 
-interface BunnyClient {
+interface BunnyEdgeStorageClient {
   /**
    * returns the content of a remote file on the CDN,
    * if there's a trailing slash it reverts to the `list` method
@@ -76,7 +76,7 @@ const successfulDelete = {
   Message: 'File deleted successfuly.',
 }
 
-const createBunnyClient = (cdn: CDN, _logger: Logger): BunnyClient => {
+const createBunnyEdgeStorageClient = (cdn: CDN, _logger: Logger): BunnyEdgeStorageClient => {
   const { baseURL: { href: baseURL } } = cdn
   const httpClient = createHttpClient({
     baseURL,
@@ -201,5 +201,5 @@ const createBunnyClient = (cdn: CDN, _logger: Logger): BunnyClient => {
   }
 }
 
-export type { BunnyClient }
-export { createBunnyClient }
+export type { BunnyEdgeStorageClient }
+export { createBunnyEdgeStorageClient }

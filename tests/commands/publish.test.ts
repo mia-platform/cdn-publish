@@ -6,14 +6,14 @@ import type { Context as MochaContext } from 'mocha'
 import { beforeEach, describe, it, afterEach } from 'mocha'
 
 import { createCdnContext } from '../../src/cdn.js'
-import { createBunnyClient } from '../../src/clients/bunny-client.js'
-import publish from '../../src/commands/publish.js'
+import { createBunnyEdgeStorageClient } from '../../src/clients/bunny-edge-storage.js'
+import { createCommand } from '../../src/command.js'
 import { absoluteResolve } from '../../src/glob.js'
 import type { RelPath } from '../../src/types.js'
 import { testPackagesNamespace } from '../consts.js'
-import { accessKey, createServer } from '../server.js'
+import { storageAccessKey, createServer } from '../server.js'
 import type { Temp } from '../utils.js'
-import { createPackageJson, createResources, createTmpDir, loggerStub } from '../utils.js'
+import { buildCommandArguments, cliErrorRequiredOption, cliErrorUnknownOption, createPackageJson, createResources, createTmpDir, loggerStub } from '../utils.js'
 
 interface Context extends MochaContext {
   cleanup?: () => void | PromiseLike<void> | Promise<void>
@@ -76,9 +76,8 @@ function createCdnPath(packageCtx: PackageCtx): RelPath {
 }
 
 describe('publish project', () => {
-  const cliCconfig = { global, logger: loggerStub, workingDir: absoluteResolve('.') }
-  const cdn = createCdnContext(accessKey, {})
-  const client = createBunnyClient(cdn, loggerStub)
+  const cdn = createCdnContext(storageAccessKey, {})
+  const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
   beforeEach(async function (this: Context) {
     mock.restoreAll()
@@ -89,13 +88,49 @@ describe('publish project', () => {
     await this.cleanup?.()
   })
 
+  describe('should have those arguments', () => {
+    it('-k, --storage-access-key', async () => {
+      await expect(createCommand(
+        buildCommandArguments(['publish']),
+        global,
+        loggerStub
+      )).to.be.eventually.rejectedWith(cliErrorRequiredOption('-k, --storage-access-key <string>'))
+    })
+
+    it('-p, --project <string>', async () => {
+      await expect(createCommand(
+        buildCommandArguments(['publish', '-k', storageAccessKey, '--projectt', 'test']),
+        global,
+        loggerStub
+      )).to.be.eventually.rejectedWith(cliErrorUnknownOption('--projectt', '--project'))
+    })
+
+    it('--override-version [string]', async () => {
+      await expect(createCommand(
+        buildCommandArguments(['publish', '-k', storageAccessKey, '--override-versionn']),
+        global,
+        loggerStub
+      )).to.be.eventually.rejectedWith(cliErrorUnknownOption('--override-versionn', '--override-version'))
+    })
+
+    it('--checksum [string]', async () => {
+      await expect(createCommand(
+        buildCommandArguments(['publish', '-k', storageAccessKey, '--checksumm']),
+        global,
+        loggerStub
+      )).to.be.eventually.rejectedWith(cliErrorUnknownOption('--checksumm', '--checksum'))
+    })
+  })
+
   describe('without arguments', () => {
     it('should push empty senver package', async () => {
       const { packageCtx, repositoryCtx } = await createTemporaryRepository()
-      await expect(publish.bind(cliCconfig)([], {
-        accessKey,
-        project: absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME),
-      })).to.be.eventually.fulfilled
+      const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
+      await expect(createCommand(
+        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath]),
+        global,
+        loggerStub
+      )).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)
       await expect(client.list(cdnRepositoryPath))
@@ -106,28 +141,33 @@ describe('publish project', () => {
 
     it('should throw error if no files found package', async () => {
       const { repositoryCtx } = await createTemporaryRepository({ files: ['notExistingFile.js'] })
+      const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
 
-      await expect(publish.bind(cliCconfig)([], {
-        accessKey,
-        project: absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME),
-      })).to.be.eventually.rejectedWith('No file selected to PUT')
+      await expect(createCommand(
+        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath]),
+        global,
+        loggerStub
+      )).to.be.eventually.rejectedWith('No file selected to PUT')
 
       await repositoryCtx.cleanup()
     })
 
     it('should throw error if pushed server package it is already present', async () => {
       const { packageCtx, repositoryCtx } = await createTemporaryRepository()
+      const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
 
-      await expect(publish.bind(cliCconfig)([], {
-        accessKey,
-        project: absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME),
-      })).to.be.eventually.fulfilled
+      await expect(createCommand(
+        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath]),
+        global,
+        loggerStub
+      )).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)
-      await expect(publish.bind(cliCconfig)([], {
-        accessKey,
-        project: absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME),
-      })).to.be.eventually.rejectedWith(`Folder ${cdnRepositoryPath} is not empty and scoped with semver versioning`)
+      await expect(createCommand(
+        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath]),
+        global,
+        loggerStub
+      )).to.be.eventually.rejectedWith(`Folder ${cdnRepositoryPath} is not empty and scoped with semver versioning`)
 
       await repositoryCtx.cleanup()
     })
@@ -136,12 +176,13 @@ describe('publish project', () => {
   describe('with --override-version', () => {
     it('should push empty senver package', async () => {
       const { packageCtx, repositoryCtx } = await createTemporaryRepository()
+      const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
 
-      await expect(publish.bind(cliCconfig)([], {
-        accessKey,
-        overrideVersion: true,
-        project: absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME),
-      })).to.be.eventually.fulfilled
+      await expect(createCommand(
+        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath, '--override-version']),
+        global,
+        loggerStub
+      )).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)
       await expect(client.list(cdnRepositoryPath))
@@ -152,15 +193,14 @@ describe('publish project', () => {
 
     it('should override a senver package', async () => {
       const version = '1.0.0'
-      const { packageCtx, repositoryCtx } = await createTemporaryRepository({
-        version,
-      })
+      const { packageCtx, repositoryCtx } = await createTemporaryRepository({ version })
+      const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
 
-      await expect(publish.bind(cliCconfig)([], {
-        accessKey,
-        overrideVersion: true,
-        project: absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME),
-      })).to.be.eventually.fulfilled
+      await expect(createCommand(
+        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath, '--override-version']),
+        global,
+        loggerStub
+      )).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)
       await expect(client.list(cdnRepositoryPath))
@@ -176,11 +216,12 @@ describe('publish project', () => {
         version,
       })
 
-      await expect(publish.bind(cliCconfig)([], {
-        accessKey,
-        overrideVersion: true,
-        project: absoluteResolve(repositoryCtxUpdate.name, PACKAGE_JSON_FILENAME),
-      })).to.be.eventually.fulfilled
+      const projectPathUpdate = absoluteResolve(repositoryCtxUpdate.name, PACKAGE_JSON_FILENAME)
+      await expect(createCommand(
+        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPathUpdate, '--override-version']),
+        global,
+        loggerStub
+      )).to.be.eventually.fulfilled
 
       await expect(client.list(cdnRepositoryPath))
         .to.eventually.be.fulfilled.and.to.have.length(3)
@@ -190,13 +231,14 @@ describe('publish project', () => {
 
     it('should push a custom senver tag', async () => {
       const { packageCtx, repositoryCtx } = await createTemporaryRepository()
+      const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
       const customVersion = 'latest'
 
-      await expect(publish.bind(cliCconfig)([], {
-        accessKey,
-        overrideVersion: customVersion,
-        project: absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME),
-      })).to.be.eventually.fulfilled
+      await expect(createCommand(
+        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath, '--override-version', customVersion]),
+        global,
+        loggerStub
+      )).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)
 

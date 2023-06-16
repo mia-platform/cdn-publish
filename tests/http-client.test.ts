@@ -8,7 +8,7 @@ import chaiAsPromised from 'chai-as-promised'
 import { beforeEach, describe, it } from 'mocha'
 
 import { createCdnContext } from '../src/cdn.js'
-import { createBunnyClient } from '../src/clients/bunny-client.js'
+import { createBunnyEdgeStorageClient } from '../src/clients/bunny-edge-storage.js'
 import { createHttpClient } from '../src/clients/http-client.js'
 import MysteryBoxError from '../src/error.js'
 import { absoluteResolve } from '../src/glob.js'
@@ -91,7 +91,7 @@ describe('http client tests', () => {
       return new Response(JSON.stringify({ error: 'Not Found' }), { status: 404 })
     })
 
-    const client = createBunnyClient(cdn, loggerStub)
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     await expect(client.list(path))
       .to.eventually.be.rejectedWith(MysteryBoxError)
@@ -114,7 +114,7 @@ describe('http client tests', () => {
       return new Response(JSON.stringify({ error: 'Not Found' }), { status: 404 })
     })
 
-    const client = createBunnyClient(cdn, loggerStub)
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     await expect(client.list(path))
       .to.eventually.be.fulfilled.and.have.members([])
@@ -126,7 +126,7 @@ describe('http client tests', () => {
 
     const accessKey = 'secret'
     const cdn = createCdnContext(accessKey)
-    const client = createBunnyClient(cdn, loggerStub)
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     await expect(client.put('./__test', [
       {
@@ -150,7 +150,7 @@ describe('http client tests', () => {
 
     const accessKey = 'secret'
     const cdn = createCdnContext(accessKey)
-    const client = createBunnyClient(cdn, loggerStub)
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
       const stringifiedUrl = url instanceof URL ? url.href : (url instanceof Request ? url.url : url)
@@ -184,7 +184,7 @@ describe('http client tests', () => {
 
     const accessKey = 'secret'
     const cdn = createCdnContext(accessKey)
-    const client = createBunnyClient(cdn, loggerStub)
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
       const stringifiedUrl = url instanceof URL ? url.href : (url instanceof Request ? url.url : url)
@@ -218,7 +218,7 @@ describe('http client tests', () => {
 
     const accessKey = 'secret'
     const cdn = createCdnContext(accessKey)
-    const client = createBunnyClient(cdn, loggerStub)
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
       const stringifiedUrl = url instanceof URL ? url.href : (url instanceof Request ? url.url : url)
@@ -257,7 +257,7 @@ describe('http client tests', () => {
 
     const accessKey = 'secret'
     const cdn = createCdnContext(accessKey)
-    const client = createBunnyClient(cdn, loggerStub)
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
       const stringifiedUrl = url instanceof URL ? url.href : (url instanceof Request ? url.url : url)
@@ -317,7 +317,7 @@ describe.skip('e2e DONT USE', () => {
       throw new TypeError('must set an STORAGE_ACCESS_KEY')
     }
     const cdn = createCdnContext(accessKey)
-    const client = createBunnyClient(cdn, loggerStub)
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     const loaders = resources.map((name) => ({
       absolutePath: absoluteResolve(tmpCtx.name, name),

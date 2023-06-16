@@ -9,12 +9,12 @@ import type { Context as MochaContext } from 'mocha'
 import { afterEach, beforeEach, before, describe, it } from 'mocha'
 
 import { createCdnContext } from '../src/cdn.js'
-import { createBunnyClient } from '../src/clients/bunny-client.js'
+import { createBunnyEdgeStorageClient } from '../src/clients/bunny-edge-storage.js'
 import MysteryBoxError from '../src/error.js'
 import { absoluteResolve } from '../src/glob.js'
 import type { LoadingContext } from '../src/types.js'
 
-import { accessKey, bunny, createServer, indexHash } from './server.js'
+import { storageAccessKey, bunny, createServer, indexHash } from './server.js'
 import { createResources, createTmpDir, loggerStub } from './utils.js'
 
 interface Context extends MochaContext {
@@ -36,16 +36,16 @@ describe('bunny cdn client', () => {
   })
 
   it('should get a list of files', async () => {
-    const cdn = createCdnContext(accessKey, {})
-    const client = createBunnyClient(cdn, loggerStub)
+    const cdn = createCdnContext(storageAccessKey, {})
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     await expect(client.list('./__test/'))
       .to.eventually.be.fulfilled.and.to.have.length(3)
   })
 
   it('should fail to get a single file', async () => {
-    const cdn = createCdnContext(accessKey, {})
-    const client = createBunnyClient(cdn, loggerStub)
+    const cdn = createCdnContext(storageAccessKey, {})
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     await expect(client.get('./__test/other.json'))
       .to.eventually.be.rejected.and.satisfies((error: unknown) => {
@@ -65,16 +65,16 @@ describe('bunny cdn client', () => {
   })
 
   it('should get a single file', async () => {
-    const cdn = createCdnContext(accessKey, {})
-    const client = createBunnyClient(cdn, loggerStub)
+    const cdn = createCdnContext(storageAccessKey, {})
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     await expect(client.get('./__test/file0.txt'))
       .to.eventually.be.fulfilled.and.be.equal('file0.txt')
   })
 
   it('should revert to directory', async () => {
-    const cdn = createCdnContext(accessKey, {})
-    const client = createBunnyClient(cdn, loggerStub)
+    const cdn = createCdnContext(storageAccessKey, {})
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     await expect(client.get('./__test/other.json/'))
       .to.eventually.be.fulfilled.and.be.eql([])
@@ -84,8 +84,8 @@ describe('bunny cdn client', () => {
     const resource = 'index.html'
     const tmpCtx = await createTmpDir(createResources([resource]))
 
-    const cdn = createCdnContext(accessKey, {})
-    const client = createBunnyClient(cdn, loggerStub)
+    const cdn = createCdnContext(storageAccessKey, {})
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     await expect(
       client.put(
@@ -118,8 +118,8 @@ describe('bunny cdn client', () => {
     const resource = 'index.html'
     const tmpCtx = await createTmpDir(createResources([resource]))
 
-    const cdn = createCdnContext(accessKey, {})
-    const client = createBunnyClient(cdn, loggerStub)
+    const cdn = createCdnContext(storageAccessKey, {})
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     await expect(
       client.put(
@@ -147,8 +147,8 @@ describe('bunny cdn client', () => {
     const resource = 'index.html'
     const tmpCtx = await createTmpDir(createResources([resource]))
 
-    const cdn = createCdnContext(accessKey, {})
-    const client = createBunnyClient(cdn, loggerStub)
+    const cdn = createCdnContext(storageAccessKey, {})
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     await expect(
       client.put(
@@ -170,8 +170,8 @@ describe('bunny cdn client', () => {
   })
 
   it('should fail deleting a not existing file', async () => {
-    const cdn = createCdnContext(accessKey, {})
-    const client = createBunnyClient(cdn, loggerStub)
+    const cdn = createCdnContext(storageAccessKey, {})
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     await expect(
       client.delete('./__test/1.0.0/', './notExistingFile.html')
@@ -189,8 +189,8 @@ describe('bunny cdn client', () => {
   })
 
   it('should not fail deleting a not existing file with flag', async () => {
-    const cdn = createCdnContext(accessKey, {})
-    const client = createBunnyClient(cdn, loggerStub)
+    const cdn = createCdnContext(storageAccessKey, {})
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     await expect(
       client.delete('./__test/1.0.0/', './notExistingFile.html', true)
@@ -198,8 +198,8 @@ describe('bunny cdn client', () => {
   })
 
   it('should succed deleting', async () => {
-    const cdn = createCdnContext(accessKey, {})
-    const client = createBunnyClient(cdn, loggerStub)
+    const cdn = createCdnContext(storageAccessKey, {})
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     await expect(
       client.delete('./__test/0.0.0/', './index.html')
@@ -236,8 +236,8 @@ describe('restore check on semver folder put', () => {
       return new Response(JSON.stringify(bunny.headers404), { headers: bunny.headers404, status: 404 })
     })
 
-    const cdn = createCdnContext(accessKey, {})
-    const client = createBunnyClient(cdn, loggerStub)
+    const cdn = createCdnContext(storageAccessKey, {})
+    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     await expect(
       client.put(

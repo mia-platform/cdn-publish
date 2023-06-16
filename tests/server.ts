@@ -48,6 +48,16 @@ const headers201 = {
   'transfer-encoding': 'chunked',
 }
 
+// 204
+const headers204 = {
+  'access-control-allow-headers': 'AccessKey, Content-Type',
+  'access-control-allow-methods': 'GET, DELETE, POST, PUT, DESCRIBE',
+  'access-control-allow-origin': '*',
+  connection: 'keep-alive',
+  'content-type': 'application/text',
+  'transfer-encoding': 'chunked',
+}
+
 // 400
 const response400 = ''
   + '<html>'
@@ -93,6 +103,7 @@ const stringifyUrl = (url: URL | RequestInfo) => (
     )
 )
 
+const storageAccessKey = 'secret'
 const accessKey = 'secret'
 
 const baseFile = {
@@ -161,41 +172,38 @@ const createServer = async () => {
       return res404
     }
 
-    // getters
-    if (method === 'GET') {
-      if (headers?.AccessKey === accessKey) {
-        if (href.endsWith('/')) {
-          const dirContent = readDir(href)
-          const json = JSON.stringify(dirContent)
-          return new Response(json, { headers: headers200, status: 200 })
-        }
-
-        if (headers.Accept === '*/*') {
-          if (filepathExists(href)) {
-            return new Response(
-              getFile(href),
-              { headers: { ...headers200, 'Content-Type': 'text/plain' }, status: 200 }
-            )
-          }
-          return res404
-        }
-      }
-
+    if (headers?.AccessKey !== storageAccessKey) {
       return res401
     }
 
-    // delete
-    if (method === 'DELETE') {
-      if (headers?.AccessKey === accessKey) {
+    // getters
+    if (method === 'GET') {
+      if (href.endsWith('/')) {
+        const dirContent = readDir(href)
+        const json = JSON.stringify(dirContent)
+        return new Response(json, { headers: headers200, status: 200 })
+      }
+
+      if (headers.Accept === '*/*') {
         if (filepathExists(href)) {
-          deleteFilepath(href)
           return new Response(
-            JSON.stringify(responseDelete200), { headers: headers200, status: 200 }
+            getFile(href),
+            { headers: { ...headers200, 'Content-Type': 'text/plain' }, status: 200 }
           )
         }
         return res404
       }
-      return res401
+    }
+
+    // delete
+    if (method === 'DELETE') {
+      if (filepathExists(href)) {
+        deleteFilepath(href)
+        return new Response(
+          JSON.stringify(responseDelete200), { headers: headers200, status: 200 }
+        )
+      }
+      return res404
     }
 
     // put
@@ -221,6 +229,7 @@ const createServer = async () => {
 const bunny = {
   headers200,
   headers201,
+  headers204,
   headers400,
   headers401,
   headers404,
@@ -230,4 +239,4 @@ const bunny = {
   response404,
   responseDelete200,
 }
-export { createServer, indexHash, accessKey, bunny }
+export { createServer, indexHash, storageAccessKey, accessKey, bunny }

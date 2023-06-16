@@ -10,11 +10,6 @@ interface CDN {
   readonly storageZoneName: string
 }
 
-const defaultConfig = {
-  server: 'https://storage.bunnycdn.com',
-  storageZoneName: 'mia-platform-test',
-}
-
 function endsWithSlash(input: RelPath): `./${string}/`
 function endsWithSlash(input: string): `${string}/`
 function endsWithSlash(input: string): string {
@@ -28,7 +23,7 @@ const slashWrapper = (input: string) => {
 
 const createCdnContext = (accessKey: string, options: Partial<Omit<CDN, 'url'>> = {}): CDN => {
   const config = {
-    ...defaultConfig,
+    storageZoneName: '',
     ...options,
   }
 

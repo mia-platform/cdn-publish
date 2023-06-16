@@ -34,6 +34,8 @@ export const createCommand = async (argv: string[], global: Global, logger: Logg
   program.command('publish')
     .description('Pushes a folder to the CDN storage')
     .requiredOption('-k, --storage-access-key <string>', 'the key to access to edge storage API')
+    .requiredOption('-s, --storage-zone-name <string>', 'which storage name to query')
+    .option('-u, --base-url <string>', 'base url to make API calls to', 'https://storage.bunnycdn.com')
     .option('-p, --project <string>', 'location of the package.json file', 'package.json')
     .option(
       '-s, --scope <string>',
@@ -61,12 +63,16 @@ export const createCommand = async (argv: string[], global: Global, logger: Logg
   program.command('list')
     .description('Retrieves the content of a folder in the CDN storage')
     .requiredOption('-k, --storage-access-key <string>', 'the key to access to edge storage API')
+    .requiredOption('-s, --storage-zone-name <string>', 'which storage name to query')
+    .option('-u, --base-url <string>', 'base url to make API calls to', 'https://storage.bunnycdn.com')
     .argument('<dir>')
     .action(list.bind(config))
 
   program.command('delete')
     .description('Retrieves the content of a folder in the CDN storage')
     .requiredOption('-k, --storage-access-key <string>', 'the key to access to edge storage API')
+    .requiredOption('-s, --storage-zone-name <string>', 'which storage name to query')
+    .option('-u, --base-url <string>', 'base url to make API calls to', 'https://storage.bunnycdn.com')
     .option('--avoid-throwing', 'in case of failure does not fail with error code')
     .argument('<dir>')
     .action(deleteFn.bind(config))

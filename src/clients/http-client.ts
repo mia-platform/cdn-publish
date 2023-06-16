@@ -52,10 +52,6 @@ const serializeInput = (data: unknown): BodyInit | null | undefined => {
     return new Blob([data])
   }
 
-  if (typeof data === 'object') {
-    return
-  }
-
   throw new MysteryBoxError(Error.BodyNotOk, 'cannot parse this type of body', undefined)
 }
 

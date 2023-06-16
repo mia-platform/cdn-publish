@@ -4,7 +4,9 @@ import type { Config } from '../types.js'
 
 interface Options {
   avoidThrowing?: boolean
+  baseUrl: string
   storageAccessKey: string
+  storageZoneName: string
 }
 
 const normalize = (input: string): {dir: `./${string}/`; filename: `./${string}` | undefined} => {
@@ -30,8 +32,15 @@ const normalize = (input: string): {dir: `./${string}/`; filename: `./${string}`
 
 async function deleteFn(this: Config, matcher: string, opts: Options) {
   const { logger } = this
-  const { storageAccessKey, avoidThrowing } = opts
-  const cdn = createCdnContext(storageAccessKey, {})
+  const {
+    storageAccessKey,
+    baseUrl: server,
+    storageZoneName,
+    avoidThrowing } = opts
+  const cdn = createCdnContext(storageAccessKey, {
+    server,
+    storageZoneName,
+  })
 
   const client = createBunnyEdgeStorageClient(cdn, logger)
   const { dir, filename } = normalize(matcher)

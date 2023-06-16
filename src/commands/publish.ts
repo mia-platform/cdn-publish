@@ -15,11 +15,13 @@ import type { AbsPath, Config, LoadingContext, RelPath } from '../types'
 // }
 
 interface Options {
+  baseUrl: string
   checksum?: boolean
   overrideVersion?: string | boolean
   project: string
   scope?: string
   storageAccessKey: string
+  storageZoneName: string
 }
 
 interface PackageJsonContext {
@@ -151,8 +153,13 @@ async function publish(this: Config, matchers: string[], opts: Options) {
     project,
     scope: inputScope,
     overrideVersion,
+    baseUrl: server,
+    storageZoneName,
   } = opts
-  const cdn = createCdnContext(storageAccessKey, {})
+  const cdn = createCdnContext(storageAccessKey, {
+    server,
+    storageZoneName,
+  })
 
   const pkgContext = await getPackageJson(workingDir, project)
   const allMatchers = getMatchers(matchers, pkgContext)

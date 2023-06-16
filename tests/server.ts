@@ -105,6 +105,8 @@ const stringifyUrl = (url: URL | RequestInfo) => (
 
 const storageAccessKey = 'secret'
 const accessKey = 'secret'
+const storageZoneName = 'mia-platform-test'
+const serverBaseUrl = 'http://server'
 
 const baseFile = {
   ArrayNumber: 0,
@@ -239,4 +241,12 @@ const bunny = {
   response404,
   responseDelete200,
 }
-export { createServer, indexHash, storageAccessKey, accessKey, bunny }
+export {
+  createServer,
+  indexHash,
+  storageAccessKey,
+  accessKey,
+  bunny,
+  storageZoneName,
+  serverBaseUrl,
+}

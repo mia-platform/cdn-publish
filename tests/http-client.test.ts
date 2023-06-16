@@ -14,6 +14,7 @@ import MysteryBoxError from '../src/error.js'
 import { absoluteResolve } from '../src/glob.js'
 import type { FileContext, LoadingContext } from '../src/types.js'
 
+import { accessKey, serverBaseUrl, storageZoneName } from './server.js'
 import { createResources, createTmpDir, loggerStub, noop, sha256 } from './utils.js'
 
 use(chaiAsPromised)
@@ -75,8 +76,10 @@ describe('http client tests', () => {
   })
 
   it('should handle a 400 bad request', async () => {
-    const accessKey = 'secret'
-    const cdn = createCdnContext(accessKey)
+    const cdn = createCdnContext(accessKey, {
+      server: serverBaseUrl,
+      storageZoneName,
+    })
     const path = './..%2F../' as const
 
     mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
@@ -98,8 +101,10 @@ describe('http client tests', () => {
   })
 
   it('should retrieve data on a 200', async () => {
-    const accessKey = 'secret'
-    const cdn = createCdnContext(accessKey)
+    const cdn = createCdnContext(accessKey, {
+      server: serverBaseUrl,
+      storageZoneName,
+    })
     const path = './__test/' as const
 
     mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
@@ -124,9 +129,14 @@ describe('http client tests', () => {
     const resource = 'package.json'
     const tmpCtx = await createTmpDir(createResources([resource]))
 
-    const accessKey = 'secret'
-    const cdn = createCdnContext(accessKey)
+    const cdn = createCdnContext(accessKey, {
+      server: serverBaseUrl,
+      storageZoneName,
+    })
     const client = createBunnyEdgeStorageClient(cdn, loggerStub)
+
+    // Avoid to call a real server
+    mock.method(global, 'fetch', async () => ({}))
 
     await expect(client.put('./__test', [
       {
@@ -148,8 +158,10 @@ describe('http client tests', () => {
     const resource = 'package.json'
     const tmpCtx = await createTmpDir(createResources([resource]))
 
-    const accessKey = 'secret'
-    const cdn = createCdnContext(accessKey)
+    const cdn = createCdnContext(accessKey, {
+      server: serverBaseUrl,
+      storageZoneName,
+    })
     const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
@@ -182,8 +194,10 @@ describe('http client tests', () => {
     const resources = Array(26).fill(0).map((_, idx) => `file${idx}.js`)
     const tmpCtx = await createTmpDir(createResources(resources))
 
-    const accessKey = 'secret'
-    const cdn = createCdnContext(accessKey)
+    const cdn = createCdnContext(accessKey, {
+      server: serverBaseUrl,
+      storageZoneName,
+    })
     const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
@@ -216,8 +230,10 @@ describe('http client tests', () => {
     const resources = Array(3).fill(0).map((_, idx) => `file${idx}.js`)
     const tmpCtx = await createTmpDir(createResources(resources))
 
-    const accessKey = 'secret'
-    const cdn = createCdnContext(accessKey)
+    const cdn = createCdnContext(accessKey, {
+      server: serverBaseUrl,
+      storageZoneName,
+    })
     const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
@@ -255,8 +271,10 @@ describe('http client tests', () => {
     const resource = 'package.json'
     const tmpCtx = await createTmpDir(createResources([resource]))
 
-    const accessKey = 'secret'
-    const cdn = createCdnContext(accessKey)
+    const cdn = createCdnContext(accessKey, {
+      server: serverBaseUrl,
+      storageZoneName,
+    })
     const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
@@ -312,11 +330,14 @@ describe.skip('e2e DONT USE', () => {
     const resources = Array(100).fill(0).map((_, idx) => `file${idx}.txt`)
     const tmpCtx = await createTmpDir(createResources(resources))
 
-    const accessKey = process.env.STORAGE_ACCESS_KEY
-    if (!accessKey) {
+    const e2eAccessKey = process.env.STORAGE_ACCESS_KEY
+    if (!e2eAccessKey) {
       throw new TypeError('must set an STORAGE_ACCESS_KEY')
     }
-    const cdn = createCdnContext(accessKey)
+    const cdn = createCdnContext(e2eAccessKey, {
+      server: serverBaseUrl,
+      storageZoneName,
+    })
     const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     const loaders = resources.map((name) => ({
@@ -340,16 +361,19 @@ describe.skip('e2e DONT USE', () => {
     this.timeout(100000)
     // nock.enableNetConnect()
 
-    const accessKey = process.env.STORAGE_ACCESS_KEY
-    if (!accessKey) {
+    const e2eAccessKey = process.env.STORAGE_ACCESS_KEY
+    if (!e2eAccessKey) {
       throw new TypeError('must set an STORAGE_ACCESS_KEY')
     }
 
-    const cdn = createCdnContext(accessKey)
+    const cdn = createCdnContext(e2eAccessKey, {
+      server: serverBaseUrl,
+      storageZoneName,
+    })
     const client = createHttpClient({
       baseURL: cdn.baseURL.href,
       headers: {
-        AccessKey: accessKey,
+        AccessKey: e2eAccessKey,
       },
     })
 

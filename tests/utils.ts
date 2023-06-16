@@ -63,6 +63,8 @@ const cliErrorUnknownOption = (wrongCmd: string, rightCmd: string) =>
 
 const cliErrorRequiredOption = (cmd: string) => `error: required option '${cmd}' not specified`
 
+const cliErrorMissingArgument = (cmd: string) => `error: option '${cmd}' argument missing`
+
 export type { Temp }
 export {
   createTmpDir,
@@ -75,4 +77,5 @@ export {
   buildCommandArguments,
   cliErrorUnknownOption,
   cliErrorRequiredOption,
+  cliErrorMissingArgument,
 }

@@ -53,7 +53,7 @@ const creatBunnyApiClient = (cdn: CDN, _logger: Logger): BunnyApiClient => {
 
   const purgeCache = async (id: number) => httpClient.post(
     `/pullzone/${id}/purgeCache`,
-    {},
+    undefined,
     {
       headers: { Accept: 'application/json' },
     }

@@ -3,7 +3,9 @@ import { createBunnyEdgeStorageClient } from '../clients/bunny-edge-storage.js'
 import type { Config } from '../types'
 
 interface Options {
+  baseUrl: string
   storageAccessKey: string
+  storageZoneName: string
 }
 
 const normalize = (input: string): `./${string}/` => {
@@ -19,8 +21,11 @@ const normalize = (input: string): `./${string}/` => {
 
 async function list(this: Config, dir: string, opts: Options) {
   const { logger } = this
-  const { storageAccessKey } = opts
-  const cdn = createCdnContext(storageAccessKey, {})
+  const { storageAccessKey, baseUrl: server, storageZoneName } = opts
+  const cdn = createCdnContext(storageAccessKey, {
+    server,
+    storageZoneName,
+  })
 
   const client = createBunnyEdgeStorageClient(cdn, logger)
 

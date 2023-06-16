@@ -2,16 +2,20 @@ import { createCdnContext } from '../cdn.js'
 import { creatBunnyApiClient } from '../clients/bunny-api.js'
 import type { Config } from '../types'
 
-interface OptionsList {
+interface PullzoneOptions {
   accessKey: string
+  baseUrl: string
+}
+
+interface OptionsList extends PullzoneOptions{
   search?: string
 }
 
 async function list(this: Config, opts: OptionsList) {
   const { logger } = this
-  const { accessKey, search } = opts
+  const { accessKey, baseUrl: server, search } = opts
   const cdn = createCdnContext(accessKey, {
-    server: 'https://api.bunny.net/',
+    server,
     storageZoneName: '',
   })
 
@@ -23,16 +27,15 @@ async function list(this: Config, opts: OptionsList) {
     })
 }
 
-interface OptionsPurgeCache {
-  accessKey: string
+interface OptionsPurgeCache extends PullzoneOptions {
   zone?: number
 }
 
 async function purgeCache(this: Config, opts: OptionsPurgeCache) {
   const { logger } = this
-  const { accessKey, zone } = opts
+  const { accessKey, baseUrl: server, zone } = opts
   const cdn = createCdnContext(accessKey, {
-    server: 'https://api.bunny.net/',
+    server,
     storageZoneName: '',
   })
 

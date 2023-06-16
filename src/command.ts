@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs'
 
+import type IPackageJson from '@ts-type/package-dts'
 import { Command } from 'commander'
 
 import deleteFn from './commands/delete.js'
@@ -10,16 +11,11 @@ import { absoluteResolve } from './glob.js'
 import type { Logger } from './logger.js'
 import type { Global } from './types'
 
-interface PackageJson {
-  description: string
-  version: string
-}
-
-const packageJSON = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url)).toString()) as PackageJson
+const packageJSON = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url)).toString()) as IPackageJson
 
 export const createCommand = async (argv: string[], global: Global, logger: Logger) => {
   const config = { global, logger, workingDir: absoluteResolve('.') }
-  const { description, version } = packageJSON('../package.json')
+  const { description = '', version = '' } = packageJSON('../package.json')
 
   const program = new Command()
   program.exitOverride()
@@ -34,6 +30,8 @@ export const createCommand = async (argv: string[], global: Global, logger: Logg
   program.command('publish')
     .description('Pushes a folder to the CDN storage')
     .requiredOption('-k, --storage-access-key <string>', 'the key to access to edge storage API')
+    .requiredOption('-s, --storage-zone-name <string>', 'which storage name to query')
+    .option('-u, --base-url <string>', 'base url to make API calls to', 'https://storage.bunnycdn.com')
     .option('-p, --project <string>', 'location of the package.json file', 'package.json')
     .option(
       '-s, --scope <string>',
@@ -61,27 +59,35 @@ export const createCommand = async (argv: string[], global: Global, logger: Logg
   program.command('list')
     .description('Retrieves the content of a folder in the CDN storage')
     .requiredOption('-k, --storage-access-key <string>', 'the key to access to edge storage API')
+    .requiredOption('-s, --storage-zone-name <string>', 'which storage name to query')
+    .option('-u, --base-url <string>', 'base url to make API calls to', 'https://storage.bunnycdn.com')
     .argument('<dir>')
     .action(list.bind(config))
 
   program.command('delete')
     .description('Retrieves the content of a folder in the CDN storage')
     .requiredOption('-k, --storage-access-key <string>', 'the key to access to edge storage API')
+    .requiredOption('-s, --storage-zone-name <string>', 'which storage name to query')
+    .option('-u, --base-url <string>', 'base url to make API calls to', 'https://storage.bunnycdn.com')
     .option('--avoid-throwing', 'in case of failure does not fail with error code')
     .argument('<dir>')
     .action(deleteFn.bind(config))
 
   // Pullzone
   const pullzoneCmd = program.command('pullzone')
+    .description('All pull zone related sub commands')
+
   pullzoneCmd.command('list')
     .description('Retrieves all the aviable pull zones')
     .requiredOption('-k, --access-key <string>', 'the key to access to bunny API')
+    .option('-u, --base-url <string>', 'base url to make API calls to', 'https://api.bunny.net/')
     .option('-s, --search <string>', 'query string to filter the results')
     .action(pullzone.list.bind(config))
 
   pullzoneCmd.command('purge')
     .description('Purges all aviables pull zones')
     .requiredOption('-k, --access-key <string>', 'the key to access to bunny API')
+    .option('-u, --base-url <string>', 'base url to make API calls to', 'https://api.bunny.net/')
     .option('-z, --zone <string>', 'to purge only a specific zone id')
     .action(pullzone.purgeCache.bind(config))
 

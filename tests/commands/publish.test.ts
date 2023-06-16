@@ -11,9 +11,9 @@ import { createCommand } from '../../src/command.js'
 import { absoluteResolve } from '../../src/glob.js'
 import type { RelPath } from '../../src/types.js'
 import { testPackagesNamespace } from '../consts.js'
-import { storageAccessKey, createServer } from '../server.js'
+import { storageAccessKey, createServer, storageZoneName, serverBaseUrl } from '../server.js'
 import type { Temp } from '../utils.js'
-import { buildCommandArguments, cliErrorRequiredOption, cliErrorUnknownOption, createPackageJson, createResources, createTmpDir, loggerStub } from '../utils.js'
+import { buildCommandArguments, cliErrorMissingArgument, cliErrorRequiredOption, cliErrorUnknownOption, createPackageJson, createResources, createTmpDir, loggerStub } from '../utils.js'
 
 interface Context extends MochaContext {
   cleanup?: () => void | PromiseLike<void> | Promise<void>
@@ -76,8 +76,13 @@ function createCdnPath(packageCtx: PackageCtx): RelPath {
 }
 
 describe('publish project', () => {
-  const cdn = createCdnContext(storageAccessKey, {})
+  const cdn = createCdnContext(storageAccessKey, {
+    server: serverBaseUrl,
+    storageZoneName,
+  })
   const client = createBunnyEdgeStorageClient(cdn, loggerStub)
+  const baseCommand = ['publish']
+  const baseArgs = ['-k', storageAccessKey, '-s', storageZoneName]
 
   beforeEach(async function (this: Context) {
     mock.restoreAll()
@@ -91,15 +96,37 @@ describe('publish project', () => {
   describe('should have those arguments', () => {
     it('-k, --storage-access-key', async () => {
       await expect(createCommand(
-        buildCommandArguments(['publish']),
+        buildCommandArguments([...baseCommand]),
         global,
         loggerStub
       )).to.be.eventually.rejectedWith(cliErrorRequiredOption('-k, --storage-access-key <string>'))
     })
 
+    it('-s, --storage-zone-name <string>', async () => {
+      await expect(createCommand(
+        buildCommandArguments([...baseCommand, '-k', storageAccessKey]),
+        global,
+        loggerStub
+      )).to.be.eventually.rejectedWith(cliErrorRequiredOption('-s, --storage-zone-name <string>'))
+    })
+
+    it('-u, --base-url <string>', async () => {
+      await expect(createCommand(
+        buildCommandArguments([...baseCommand, ...baseArgs, '--base-urlt', 'test']),
+        global,
+        loggerStub
+      )).to.be.eventually.rejectedWith(cliErrorUnknownOption('--base-urlt', '--base-url'))
+
+      await expect(createCommand(
+        buildCommandArguments([...baseCommand, ...baseArgs, '-u']),
+        global,
+        loggerStub
+      )).to.be.eventually.rejectedWith(cliErrorMissingArgument('-u, --base-url <string>'))
+    })
+
     it('-p, --project <string>', async () => {
       await expect(createCommand(
-        buildCommandArguments(['publish', '-k', storageAccessKey, '--projectt', 'test']),
+        buildCommandArguments([...baseCommand, ...baseArgs, '--projectt', 'test']),
         global,
         loggerStub
       )).to.be.eventually.rejectedWith(cliErrorUnknownOption('--projectt', '--project'))
@@ -107,7 +134,7 @@ describe('publish project', () => {
 
     it('--override-version [string]', async () => {
       await expect(createCommand(
-        buildCommandArguments(['publish', '-k', storageAccessKey, '--override-versionn']),
+        buildCommandArguments([...baseCommand, ...baseArgs, '--override-versionn']),
         global,
         loggerStub
       )).to.be.eventually.rejectedWith(cliErrorUnknownOption('--override-versionn', '--override-version'))
@@ -115,7 +142,7 @@ describe('publish project', () => {
 
     it('--checksum [string]', async () => {
       await expect(createCommand(
-        buildCommandArguments(['publish', '-k', storageAccessKey, '--checksumm']),
+        buildCommandArguments([...baseCommand, ...baseArgs, '--checksumm']),
         global,
         loggerStub
       )).to.be.eventually.rejectedWith(cliErrorUnknownOption('--checksumm', '--checksum'))
@@ -127,7 +154,7 @@ describe('publish project', () => {
       const { packageCtx, repositoryCtx } = await createTemporaryRepository()
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
       await expect(createCommand(
-        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath]),
+        buildCommandArguments([...baseCommand, ...baseArgs, '--project', projectPath]),
         global,
         loggerStub
       )).to.be.eventually.fulfilled
@@ -144,7 +171,7 @@ describe('publish project', () => {
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
 
       await expect(createCommand(
-        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath]),
+        buildCommandArguments([...baseCommand, ...baseArgs, '--project', projectPath]),
         global,
         loggerStub
       )).to.be.eventually.rejectedWith('No file selected to PUT')
@@ -157,14 +184,14 @@ describe('publish project', () => {
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
 
       await expect(createCommand(
-        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath]),
+        buildCommandArguments([...baseCommand, ...baseArgs, '--project', projectPath]),
         global,
         loggerStub
       )).to.be.eventually.fulfilled
 
       const cdnRepositoryPath = createCdnPath(packageCtx)
       await expect(createCommand(
-        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath]),
+        buildCommandArguments([...baseCommand, ...baseArgs, '--project', projectPath]),
         global,
         loggerStub
       )).to.be.eventually.rejectedWith(`Folder ${cdnRepositoryPath} is not empty and scoped with semver versioning`)
@@ -179,7 +206,7 @@ describe('publish project', () => {
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
 
       await expect(createCommand(
-        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath, '--override-version']),
+        buildCommandArguments([...baseCommand, ...baseArgs, '--project', projectPath, '--override-version']),
         global,
         loggerStub
       )).to.be.eventually.fulfilled
@@ -197,7 +224,7 @@ describe('publish project', () => {
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
 
       await expect(createCommand(
-        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath, '--override-version']),
+        buildCommandArguments([...baseCommand, ...baseArgs, '--project', projectPath, '--override-version']),
         global,
         loggerStub
       )).to.be.eventually.fulfilled
@@ -218,7 +245,7 @@ describe('publish project', () => {
 
       const projectPathUpdate = absoluteResolve(repositoryCtxUpdate.name, PACKAGE_JSON_FILENAME)
       await expect(createCommand(
-        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPathUpdate, '--override-version']),
+        buildCommandArguments([...baseCommand, ...baseArgs, '--project', projectPathUpdate, '--override-version']),
         global,
         loggerStub
       )).to.be.eventually.fulfilled
@@ -235,7 +262,7 @@ describe('publish project', () => {
       const customVersion = 'latest'
 
       await expect(createCommand(
-        buildCommandArguments(['publish', '-k', storageAccessKey, '--project', projectPath, '--override-version', customVersion]),
+        buildCommandArguments([...baseCommand, ...baseArgs, '--project', projectPath, '--override-version', customVersion]),
         global,
         loggerStub
       )).to.be.eventually.fulfilled

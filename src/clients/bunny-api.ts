@@ -8,6 +8,11 @@ export interface PullZoneMeta {
   Name: string
 }
 
+export interface PullZonePurgeCacheResponse {
+  id:number
+  status: number
+}
+
 interface BunnyApiClient {
   pullZone: {
     /**
@@ -22,7 +27,7 @@ interface BunnyApiClient {
      * @param id the pullzone id
      * @returns
      */
-    purgeCache(id: number): Promise<number>
+    purgeCache(id: number): Promise<PullZonePurgeCacheResponse>
   }
 }
 
@@ -58,7 +63,7 @@ const creatBunnyApiClient = (cdn: CDN, _logger: Logger): BunnyApiClient => {
       headers: { Accept: 'application/json' },
     }
   )
-    .then(({ status }) => status)
+    .then(({ status }) => ({ id, status }))
     .catch((err) => {
       return Promise.reject(err)
     })

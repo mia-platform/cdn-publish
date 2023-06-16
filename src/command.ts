@@ -80,14 +80,14 @@ export const createCommand = async (argv: string[], global: Global, logger: Logg
   pullzoneCmd.command('list')
     .description('Retrieves all the aviable pull zones')
     .requiredOption('-k, --access-key <string>', 'the key to access to bunny API')
-    .option('-u, --base-url <string>', 'base url to make API calls to', 'https://api.bunny.net/')
+    .option('-u, --base-url <string>', 'base url to make API calls to', 'https://api.bunny.net')
     .option('-s, --search <string>', 'query string to filter the results')
     .action(pullzone.list.bind(config))
 
   pullzoneCmd.command('purge')
     .description('Purges all aviables pull zones')
     .requiredOption('-k, --access-key <string>', 'the key to access to bunny API')
-    .option('-u, --base-url <string>', 'base url to make API calls to', 'https://api.bunny.net/')
+    .option('-u, --base-url <string>', 'base url to make API calls to', 'https://api.bunny.net')
     .option('-z, --zone <string>', 'to purge only a specific zone id')
     .action(pullzone.purgeCache.bind(config))
 

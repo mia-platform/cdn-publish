@@ -80,6 +80,6 @@ describe('bunny cdn client', () => {
     })
 
     await expect(client.pullZone.purgeCache(pullZoneId)).to.eventually.fulfilled
-      .and.deep.equal(204)
+      .and.deep.equal({ id: pullZoneId, status: 204 })
   })
 })

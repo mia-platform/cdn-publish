@@ -44,13 +44,10 @@ async function purgeCache(this: Config, opts: OptionsPurgeCache) {
 
 
   return Promise.all(idZones.map((id) => client.pullZone.purgeCache(id)))
-    .then((statusCodes) => {
-      const purgeResults = statusCodes.reduce<Record<string, number>>((counter, code) => {
-        if (!counter[code]) { counter[code] = 0 }
-        counter[code] += 1
-        return counter
-      }, {})
-      logger.table(purgeResults)
+    .then((responses) => {
+      logger.table(responses
+        .map(({ id, status }) => ({ idZone: id, purged: `${status === 204 ? 'Ok' : 'Error'} (${status})` }))
+      )
     })
 }
 

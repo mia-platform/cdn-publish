@@ -37,9 +37,7 @@ _Mystery Box_ has **always** two required parameter:
 Typically a release/deploy pipeline will take care or install node, build your library and caching the build
 results which must be available to the cdn release job/step.
 
-### As a CLI
-
-==============> **TODO**
+### As a CLI for file storage
 
 _Mystery Box_ can be invoked as a standalone binary from `npm`
 by installing on your global npm bin store
@@ -138,7 +136,7 @@ mb list [options] <dir>
 
 with options:
 
-- `-k`, `--access-key` -- **required**, the `storageZoneName` access key
+- `-k`, `--storage-access-key` -- **required**, the `storageZoneName` access key
 - `-s`, `--storage-zone-name` -- **required**, the `storageZoneName`
 - `-u`, `--base-url` -- the api base url, default is: `https://storage.bunnycdn.com`
 
@@ -157,7 +155,7 @@ file selected (or defaulted) by the invocation of _Mystery Box_
 
 with options:
 
-- `-k`, `--access-key` -- **required**, the `storageZoneName` access key
+- `-k`, `--storage-access-key` -- **required**, the `storageZoneName` access key
 - `-s`, `--storage-zone-name` -- **required**, the `storageZoneName`
 - `-u`, `--base-url` -- the api base url, default is: `https://storage.bunnycdn.com`
 - `-p`, `--project` -- used to override the location of the `package.json` file. Useful for repositories with workspaces
@@ -177,9 +175,48 @@ mb delete [options] <dir>
 
 with options:
 
-- `-k`, `--access-key` -- **required**, the `storageZoneName` access key
+- `-k`, `---access-key` -- **required**, the `storageZoneName` access key
 - `-s`, `--storage-zone-name` -- **required**, the `storageZoneName`
 - `-u`, `--base-url` -- the api base url, default is: `https://storage.bunnycdn.com`
 - `--avoid-throwing` -- in case of error it avoids returning an `exit 1`. Useful for CI/CD environments.
 
 ![delete](./docs/img/delete.png)
+
+## Commands to manage pull zones
+
+Here is a list of commands used to be able to interact with pull zones:
+
+**Caution: The '--access-key' token should not be confused with the '--storage-access-key' token, which is used only for file management purposes.**
+
+### List
+
+Provides a list of the avaiable pullzones
+
+
+```shell
+mb pullzone list [options]
+```
+
+with options:
+
+- `-k`, `--access-key` -- **required**, the `storageZoneName` access key
+- `-u`, `--base-url` -- the api base url, default is: `https://api.bunny.net`
+- `-s`, `--search` -- a query param to filter results (**NB. Broken in bunny API!**)
+
+![pullzone_list](./docs/img/pullzone_list.png)
+
+### Purge
+
+The following command is used to purge pull zones, either individually selected or all of them by default. Upon execution, the command provides information about the zone ID and the corresponding API response status, to know the successfully purged zones.
+
+```shell
+mb pullzone purge [options]
+```
+
+with options:
+
+- `-k`, `--access-key` -- **required**, the `storageZoneName` access key
+- `-u`, `--base-url` -- the api base url, default is: `https://api.bunny.net`
+- `-z`, `--zone` -- to purge only a specific zone id
+
+![pullzone_list](./docs/img/pullzone_purge.png)

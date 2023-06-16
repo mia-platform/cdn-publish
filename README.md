@@ -30,8 +30,9 @@ of `npm publish` which does not change the behaviors and functionality discussed
 
 _Mystery Box_ is focused on `npm` packages publish.
 
-_Mystery Box_ has only one **always** required parameter, `-k` or `--access-key` which is the API key of
-the `storageZoneName` you're targetting.
+_Mystery Box_ has **always** two required parameter:
+- `-s` or `--storage-zone-name` which is the `storageZoneName` you're targetting;
+- `-k` or `--storage-access-key` which is the API key of the `storageZoneName` you're targetting.
 
 Typically a release/deploy pipeline will take care or install node, build your library and caching the build
 results which must be available to the cdn release job/step.
@@ -68,7 +69,7 @@ cdn-release:
   cache: []
     # 👆 your cache
   script:
-    - mb publish -k "$STORAGE_ACCESS_KEY"
+    - mb publish -k "$STORAGE_ACCESS_KEY" -s "$STORAGE-ZONE"
 ```
 
 ### From source code
@@ -138,6 +139,8 @@ mb list [options] <dir>
 with options:
 
 - `-k`, `--access-key` -- **required**, the `storageZoneName` access key
+- `-s`, `--storage-zone-name` -- **required**, the `storageZoneName`
+- `-u`, `--base-url` -- the api base url, default is: `https://storage.bunnycdn.com`
 
 ![list](./docs/img/list.png)
 
@@ -155,12 +158,14 @@ file selected (or defaulted) by the invocation of _Mystery Box_
 with options:
 
 - `-k`, `--access-key` -- **required**, the `storageZoneName` access key
+- `-s`, `--storage-zone-name` -- **required**, the `storageZoneName`
+- `-u`, `--base-url` -- the api base url, default is: `https://storage.bunnycdn.com`
 - `-p`, `--project` -- used to override the location of the `package.json` file. Useful for repositories with workspaces
 - `-s`, `--scope` -- a directory to prepend to all pushed files. Defaults to the `package.json`'s `name` field matched against `/^@([^/]+)\//`
 - `--override-version [string]` -- in case the pushed context is sem-versioned, allows to opt-out of the client no-double-push policy on semver packages.
 - `--checksum` -- requires the [server](https://docs.bunny.net/reference/put_-storagezonename-path-filename) to fail the push if uploaded file has a checksum that does not match with the one computed on the client side.
 
-![list](./docs/img/publish.png)
+![publish](./docs/img/publish.png)
 
 ### Delete
 
@@ -173,6 +178,8 @@ mb delete [options] <dir>
 with options:
 
 - `-k`, `--access-key` -- **required**, the `storageZoneName` access key
+- `-s`, `--storage-zone-name` -- **required**, the `storageZoneName`
+- `-u`, `--base-url` -- the api base url, default is: `https://storage.bunnycdn.com`
 - `--avoid-throwing` -- in case of error it avoids returning an `exit 1`. Useful for CI/CD environments.
 
-![list](./docs/img/delete.png)
+![delete](./docs/img/delete.png)

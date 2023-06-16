@@ -182,7 +182,12 @@ async function publish(this: Config, matchers: string[], opts: Options) {
     rootDir,
     loadingContexts,
     isSemver
-  )
+  ).then(() => {
+    const { name } = pkgContext.content
+    logger.info(`Package: ${name ?? ''}:${version ?? ''}`)
+    logger.info(`Storage: ${cdn.baseURL.href}`)
+    logger.info(`Path: ${rootDir}`)
+  })
 }
 
 export type { Config }

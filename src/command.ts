@@ -4,6 +4,7 @@ import type IPackageJson from '@ts-type/package-dts'
 import { Command } from 'commander'
 
 import deleteFn from './commands/delete.js'
+import get from './commands/get.js'
 import list from './commands/list.js'
 import publish from './commands/publish.js'
 import pullzone from './commands/pullzone.js'
@@ -63,6 +64,14 @@ export const createCommand = async (argv: string[], global: Global, logger: Logg
     .option('-u, --base-url <string>', 'base url to make API calls to', 'https://storage.bunnycdn.com')
     .argument('<dir>')
     .action(list.bind(config))
+
+  program.command('get')
+    .description('Retrieves the content of a file in the CDN storage')
+    .requiredOption('-k, --storage-access-key <string>', 'the key to access to edge storage API')
+    .requiredOption('-s, --storage-zone-name <string>', 'which storage name to query')
+    .option('-u, --base-url <string>', 'base url to make API calls to', 'https://storage.bunnycdn.com')
+    .argument('<file>')
+    .action(get.bind(config))
 
   program.command('delete')
     .description('Retrieves the content of a folder in the CDN storage')

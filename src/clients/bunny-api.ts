@@ -1,4 +1,5 @@
 import type { CDN } from '../cdn'
+import MysteryBoxError from '../error.js'
 import type { Logger } from '../logger'
 
 import { createHttpClient } from './http-client.js'
@@ -11,6 +12,10 @@ export interface PullZoneMeta {
 export interface PullZonePurgeCacheResponse {
   id:number
   status: number
+}
+
+export class FailedPurgeCache extends MysteryBoxError {
+  response!: PullZonePurgeCacheResponse
 }
 
 interface BunnyApiClient {
@@ -27,7 +32,7 @@ interface BunnyApiClient {
      * @param id the pullzone id
      * @returns
      */
-    purgeCache(id: number): Promise<PullZonePurgeCacheResponse>
+    purgeCache(id: number): Promise<PullZonePurgeCacheResponse | FailedPurgeCache>
   }
 }
 
@@ -64,10 +69,13 @@ const creatBunnyApiClient = (cdn: CDN, _logger: Logger): BunnyApiClient => {
     }
   )
     .then(({ status }) => ({ id, status }))
-    .catch((err) => {
-      return Promise.reject(err)
-    })
+    .catch((error: FailedPurgeCache) => {
+      const { status } = error.cause as Response
 
+      error.response = { id, status }
+
+      return Promise.reject(error)
+    })
 
   return {
     pullZone: {

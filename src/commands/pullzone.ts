@@ -1,4 +1,5 @@
 import { createCdnContext } from '../cdn.js'
+import type { FailedPurgeCache, PullZonePurgeCacheResponse } from '../clients/bunny-api.js'
 import { creatBunnyApiClient } from '../clients/bunny-api.js'
 import type { Config } from '../types'
 
@@ -43,9 +44,17 @@ async function purgeCache(this: Config, opts: OptionsPurgeCache) {
   const idZones = zone ? [zone] : (await client.pullZone.list()).map(({ Id }) => Id)
 
 
-  return Promise.all(idZones.map((id) => client.pullZone.purgeCache(id)))
+  return Promise.allSettled(idZones.map((id) => client.pullZone.purgeCache(id)))
     .then((responses) => {
       logger.table(responses
+        .map((res) => {
+          if (res.status === 'rejected') {
+            const { id, status } = (res.reason as FailedPurgeCache).response
+            return { id, status }
+          }
+          const { id, status } = res.value as PullZonePurgeCacheResponse
+          return { id, status }
+        })
         .map(({ id, status }) => ({ idZone: id, purged: `${status === 204 ? 'Ok' : 'Error'} (${status})` }))
       )
     })

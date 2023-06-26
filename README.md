@@ -60,7 +60,7 @@ In a GitLab CI, the _CDN publish_ CLI can be called by running its container as 
 ```yaml
 cdn-release:
   stage: release
-  image: nexus.mia-platform.eu/back-kit/mystery-box:0.1.0
+  image: miaplatform/cdn-publish
   needs:
     []
     # 👆 your dependencies
@@ -79,7 +79,7 @@ cdn-release:
 This repository can be used as well to run _CDN publish_
 
 ```shell
-git clone https://git.tools.mia-platform.eu/platform/backoffice/back-kit/mystery-box.git
+git clone https://github.com/mia-platform/cdn-publish.git
 ```
 
 then install (we recommend using nvm to ensure proper Node.js versioning)
@@ -114,10 +114,11 @@ node dist/index.cjs [options] [command]
 Here's a list of available commands that _CDN publish_ provides. The
 placeholder `cdn` stands for the command invocation, which could either be:
 
-1. [npm] `npx ??/mystery-box`
-2. [yarn] `yarn dlx ??/mystery-box`
+1. [npm] `npx --package "@mia-platform/cdn-publish" cdn`
+2. [yarn] `yarn dlx --package "@mia-platform/cdn-publish" cdn`
 3. [docker container] `cdn`
 4. [local bundle] `node dist/index.cjs`
+5. [local install] `npm i -g . && cdn`
 
 ### Help
 

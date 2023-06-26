@@ -15,7 +15,7 @@ export const createCommand = async (argv: string[], global: Global, logger: Logg
   const program = new Command()
   program.exitOverride()
   program
-    .name('mb')
+    .name('cdn')
     .description('A client for Mia\'s CDN storage API')
     .configureOutput({
       writeErr: (str) => logger.log(str),

@@ -38,7 +38,7 @@
     "axios": "^1.4.0",
     "basic-ftp": "^5.0.3",
     "commander": "^10.0.1",
-    "glob": "^10.2.7",
+    "glob": "^10.3.0",
     "node-color-log": "^10.0.2",
     "semver-regex": "^4.0.5"
   },

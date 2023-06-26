@@ -1,7 +1,7 @@
 {
   "name": "@mia-platform/cdn-publish",
   "description": "A client for Mia's CDN storage API",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "SEE LICENSE IN LICENSE",
   "author": {
     "name": "Mia Platform Core Team",

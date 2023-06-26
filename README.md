@@ -44,7 +44,7 @@ _CDN publish_ can be invoked as a standalone binary from `npm`
 by installing on your global npm bin store
 
 ```shell
-npm install -g ??/mystery-box
+npm install -g @mia-platform/cdn-publish
 ```
 
 and then

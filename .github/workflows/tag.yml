@@ -70,5 +70,4 @@ jobs:
         run: yarn build
 
       - name: Publish
-        working-directory: ./packages/${{ steps.prepare-npm-package.outputs.package }}
         run: yarn npm publish

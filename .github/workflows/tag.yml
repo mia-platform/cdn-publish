@@ -67,7 +67,7 @@ jobs:
           echo "package=$(echo $TAGS | sed 's/^v//')" >> $GITHUB_OUTPUT
 
       - name: Build
-        run: yarn initialize --cleanup ${{ steps.prepare-npm-package.outputs.package }}
+        run: yarn build
 
       - name: Publish
         working-directory: ./packages/${{ steps.prepare-npm-package.outputs.package }}

@@ -19,7 +19,7 @@
   ],
   "type": "module",
   "bin": {
-    "mb": "./dist/index.cjs"
+    "cdn": "./dist/index.cjs"
   },
   "files": [
     "dist",

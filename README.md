@@ -1,6 +1,6 @@
-# mystery box
+# CDN publish
 
-_Mystery Box_ is a Node.js bin CLI to manage files on Mia's instance of the [bunny.net](https://bunny.net) global CDN
+_CDN publish_ is a Node.js bin CLI to manage files on Mia's instance of the [bunny.net](https://bunny.net) global CDN
 storage service.
 
 An instance of a bunny CDN provides a [file storage API](https://docs.bunny.net/reference/storage-api)
@@ -13,7 +13,7 @@ Such `storageZoneName` combined with an access key gives full access to file ope
 - put/patch
 - delete
 
-Beside providing a helpful (we hope!) wrapper around the basic HTTP client needed to query the API, _Mystery Box_
+Beside providing a helpful (we hope!) wrapper around the basic HTTP client needed to query the API, _CDN publish_
 provides opinionated behaviors that make the put/patch API look like `npm publish` and `yarn npm publish`
 
 ## `npm`-like behaviors
@@ -24,13 +24,14 @@ of `npm publish` which does not change the behaviors and functionality discussed
 1. `npm publish` will use the `package.json` file available in the working directory to establish:
    1. which files to push -> [`files` key](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#files)
    2. the scope of your package by using the [`name` key](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#name) first slice before a `/` which most often starts with an `@` sign.
-2. `npmjs` registry does not allow to PUT twice the same [`semver` version](https://semver.org/spec/v2.0.0.html) of a package, like `0.1.0` or `3.0.10-rc2`. Although we cannot enforce it on the file storage API, _Mystery Box_ enforces it (with possibility to override) on the client side. This is useful to avoid incorrect CI runs.
+2. `npmjs` registry does not allow to PUT twice the same [`semver` version](https://semver.org/spec/v2.0.0.html) of a package, like `0.1.0` or `3.0.10-rc2`. Although we cannot enforce it on the file storage API, _CDN publish_ enforces it (with possibility to override) on the client side. This is useful to avoid incorrect CI runs.
 
 ## How to use it
 
-_Mystery Box_ is focused on `npm` packages publish.
+_CDN publish_ is focused on `npm` packages publish.
 
-_Mystery Box_ has **always** two required parameter:
+_CDN publish_ has **always** two required parameter:
+
 - `-s` or `--storage-zone-name` which is the `storageZoneName` you're targetting;
 - `-k` or `--storage-access-key` which is the API key of the `storageZoneName` you're targetting.
 
@@ -39,7 +40,7 @@ results which must be available to the cdn release job/step.
 
 ### As a CLI for file storage
 
-_Mystery Box_ can be invoked as a standalone binary from `npm`
+_CDN publish_ can be invoked as a standalone binary from `npm`
 by installing on your global npm bin store
 
 ```shell
@@ -49,30 +50,33 @@ npm install -g ??/mystery-box
 and then
 
 ```shell
-mb [options] [command]
+cdn [options] [command]
 ```
 
 ### GitLab job
 
-In a GitLab CI, the _Mystery Box_ CLI can be called by running its container as per the following snippet
+In a GitLab CI, the _CDN publish_ CLI can be called by running its container as per the following snippet
 
 ```yaml
 cdn-release:
   stage: release
   image: nexus.mia-platform.eu/back-kit/mystery-box:0.1.0
-  needs: []
+  needs:
+    []
     # 👆 your dependencies
-  rules: []
+  rules:
+    []
     # 👆 your rules
-  cache: []
+  cache:
+    []
     # 👆 your cache
   script:
-    - mb publish -k "$STORAGE_ACCESS_KEY" -s "$STORAGE-ZONE"
+    - cdn publish -k "$STORAGE_ACCESS_KEY" -s "$STORAGE-ZONE"
 ```
 
 ### From source code
 
-This repository can be used as well to run _Mystery Box_
+This repository can be used as well to run _CDN publish_
 
 ```shell
 git clone https://git.tools.mia-platform.eu/platform/backoffice/back-kit/mystery-box.git
@@ -107,12 +111,12 @@ node dist/index.cjs [options] [command]
 
 ## Commands and Syntax
 
-Here's a list of available commands that _Mystery Box_ provides. The
-placeholder `mb` stands for the command invocation, which could either be:
+Here's a list of available commands that _CDN publish_ provides. The
+placeholder `cdn` stands for the command invocation, which could either be:
 
 1. [npm] `npx ??/mystery-box`
 2. [yarn] `yarn dlx ??/mystery-box`
-3. [docker container] `mb`
+3. [docker container] `cdn`
 4. [local bundle] `node dist/index.cjs`
 
 ### Help
@@ -120,7 +124,7 @@ placeholder `mb` stands for the command invocation, which could either be:
 Provides information on commands and options
 
 ```shell
-mb help [command]
+cdn help [command]
 ```
 
 ![list](./docs/img/help.png)
@@ -131,7 +135,7 @@ Provides a list of the file currently available on the storage service under
 a given path/directory
 
 ```shell
-mb list [options] <dir>
+cdn list [options] <dir>
 ```
 
 with options:
@@ -147,11 +151,11 @@ with options:
 Allows to put/patch files onto the CDN file storage service
 
 ```shell
-mb publish [options] [files...]
+cdn publish [options] [files...]
 ```
 
 the `files` optional argument takes precedence over anything specified in the `package.json`
-file selected (or defaulted) by the invocation of _Mystery Box_
+file selected (or defaulted) by the invocation of _CDN publish_
 
 with options:
 
@@ -170,7 +174,7 @@ with options:
 Provides cleanup/delete of a directory or a file on the file storage service
 
 ```shell
-mb delete [options] <dir>
+cdn delete [options] <dir>
 ```
 
 with options:
@@ -192,9 +196,8 @@ Here is a list of commands used to be able to interact with pull zones:
 
 Provides a list of the avaiable pullzones
 
-
 ```shell
-mb pullzone list [options]
+cdn pullzone list [options]
 ```
 
 with options:
@@ -210,7 +213,7 @@ with options:
 The following command is used to purge pull zones, either individually selected or all of them by default. Upon execution, the command provides information about the zone ID and the corresponding API response status, to know the successfully purged zones.
 
 ```shell
-mb pullzone purge [options]
+cdn pullzone purge [options]
 ```
 
 with options:

@@ -25,9 +25,13 @@ jobs:
           VERSION=${GITHUB_REF#refs/tags/}
           echo "version=$(echo ${VERSION} | sed s/^v//)" >> $GITHUB_OUTPUT
 
+  prepare:
+    uses: mia-platform/cdn-publish/.github/workflows/prepare.yml@main
+
   release-docker:
     needs:
       - next-version
+      - prepare
 
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     uses: mia-platform/cdn-publish/.github/workflows/release-docker.yml@main
@@ -39,6 +43,8 @@ jobs:
       token: ${{ secrets.BOT_DOCKER_TOKEN }}
 
   release-package:
+    needs:
+      - prepare
     name: Release package on npm
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
@@ -59,6 +65,14 @@ jobs:
 
       - name: Install
         run: yarn install --immutable
+
+      - name: Build Cache
+        uses: actions/cache@v3
+        id: build-cache
+        with:
+          path: |
+            ./dist
+          key: ${{ runner.os }}-build-${{ github.sha }}
 
       - name: Prepare NPM
         id: prepare-npm-package

@@ -48,7 +48,7 @@ describe('create queue tests', () => {
       return Promise.resolve(value2)
     })
 
-    await expect(createQueue([stub1, stub2]).flush())
+    await expect(createQueue([stub1, stub2], 1).flush())
       .to.eventually.be.fulfilled
       .and.have.members([value1, value2])
     expect(stub1).to.be.calledOnce

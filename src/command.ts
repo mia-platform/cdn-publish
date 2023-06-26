@@ -42,6 +42,11 @@ export const createCommand = async (argv: string[], global: Global, logger: Logg
       'will publish computing the checksum of files and could potentially fail '
         + 'if the server disagrees with the checksum on its side'
     )
+    .option(
+      '-b, --batch-size <number>',
+      'number of files to be uploaded concurrently',
+      '40'
+    )
     .argument(
       '[files...]',
       'list of file matchers, '

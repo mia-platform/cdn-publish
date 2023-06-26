@@ -63,7 +63,7 @@ interface BunnyEdgeStorageClient {
    * @param isSemver flag to avoid double push logic on semver folders
    * @returns
    */
-  put(scope: RelPath, pathnames: [LoadingContext, ...LoadingContext[]], isSemver?: boolean | undefined): Promise<void>
+  put(scope: RelPath, pathnames: [LoadingContext, ...LoadingContext[]], isSemver?: boolean, batchSize?: number): Promise<void>
 }
 
 const successfulPut = {
@@ -154,7 +154,7 @@ const createBunnyEdgeStorageClient = (cdn: CDN, logger: Logger): BunnyEdgeStorag
   const restore = (scope: RelPath) => deleteFn(scope)
     .catch(errorCatcher(Error.UnableToDeleteFile, scope))
 
-  const put = async (scope: RelPath, pathnames: [LoadingContext, ...LoadingContext[]], isSemver = false) => {
+  const put = async (scope: RelPath, pathnames: [LoadingContext, ...LoadingContext[]], isSemver = false, batchSize = 40) => {
     // checks whether putting a semver folder
     let isOkToPut = true
     if (isSemver) {
@@ -187,7 +187,7 @@ const createBunnyEdgeStorageClient = (cdn: CDN, logger: Logger): BunnyEdgeStorag
       logger.info(`Put files: ${pushedFiles}/${pathnames.length} (${(pushedFiles * 100 / pathnames.length).toFixed(2)}%)`)
     }, 2000)
 
-    return createQueue(pathnames.map(putFile)).flush()
+    return createQueue(pathnames.map(putFile), batchSize).flush()
       .catch(async (err) => {
         if (isSemver) {
           return restore(scope)

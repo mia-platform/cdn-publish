@@ -1,6 +1,6 @@
 type AsyncFunction<T> = () => Promise<T>
 
-const createQueue = <T>(fns: AsyncFunction<T>[], batchSize = 25) => {
+const createQueue = <T>(fns: AsyncFunction<T>[], batchSize: number) => {
   let promise: Promise<T> | undefined
   const executions: Promise<T>[] = []
 

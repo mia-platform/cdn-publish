@@ -132,6 +132,14 @@ describe('publish project', () => {
       )).to.be.eventually.rejectedWith(cliErrorUnknownOption('--projectt', '--project'))
     })
 
+    it('-b, --batch-size <number>', async () => {
+      await expect(createCommand(
+        buildCommandArguments([...baseCommand, ...baseArgs, '--batch-sizet', 'test']),
+        global,
+        loggerStub
+      )).to.be.eventually.rejectedWith(cliErrorUnknownOption('--batch-sizet', '--batch-size'))
+    })
+
     it('--override-version [string]', async () => {
       await expect(createCommand(
         buildCommandArguments([...baseCommand, ...baseArgs, '--override-versionn']),

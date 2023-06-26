@@ -10,12 +10,9 @@ import { Error, reject, thrower } from '../error.js'
 import { absoluteResolve, getFiles, absoluteWorkingDir } from '../glob.js'
 import type { AbsPath, Config, LoadingContext, RelPath } from '../types'
 
-// interface PublishContext extends Config {
-//   project: string
-// }
-
 interface Options {
   baseUrl: string
+  batchSize: number
   checksum?: boolean
   overrideVersion?: string | boolean
   project: string
@@ -155,6 +152,7 @@ async function publish(this: Config, matchers: string[], opts: Options) {
     overrideVersion,
     baseUrl: server,
     storageZoneName,
+    batchSize,
   } = opts
   const cdn = createCdnContext(storageAccessKey, {
     server,
@@ -181,7 +179,8 @@ async function publish(this: Config, matchers: string[], opts: Options) {
   return client.put(
     rootDir,
     loadingContexts,
-    isSemver
+    isSemver,
+    batchSize
   ).then(() => {
     const { name } = pkgContext.content
     logger.info(`Package: ${name ?? ''}:${version ?? ''}`)

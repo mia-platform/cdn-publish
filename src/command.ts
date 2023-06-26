@@ -12,7 +12,7 @@ import { absoluteResolve } from './glob.js'
 import type { Logger } from './logger.js'
 import type { Global } from './types'
 
-const packageJSON = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url)).toString()) as IPackageJson
+const packageJSON = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), { encoding: 'utf8' })) as IPackageJson
 
 export const createCommand = async (argv: string[], global: Global, logger: Logger) => {
   const config = { global, logger, workingDir: absoluteResolve('.') }

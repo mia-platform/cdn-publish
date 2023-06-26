@@ -76,7 +76,7 @@ const successfulDelete = {
   Message: 'File deleted successfuly.',
 }
 
-const createBunnyEdgeStorageClient = (cdn: CDN, _logger: Logger): BunnyEdgeStorageClient => {
+const createBunnyEdgeStorageClient = (cdn: CDN, logger: Logger): BunnyEdgeStorageClient => {
   const { baseURL: { href: baseURL } } = cdn
   const httpClient = createHttpClient({
     baseURL,
@@ -170,6 +170,7 @@ const createBunnyEdgeStorageClient = (cdn: CDN, _logger: Logger): BunnyEdgeStora
       )
     }
 
+    let pushedFiles = 0
     const putFile = (ctx: LoadingContext) => {
       const url = cdn.buildUrl(scope, ctx.pathname)
       return async () => ctx.loader()
@@ -179,7 +180,12 @@ const createBunnyEdgeStorageClient = (cdn: CDN, _logger: Logger): BunnyEdgeStora
           ...ctx,
         }))
         .catch(errorCatcher(Error.UnableToUploadFile, ctx.pathname))
+        .finally(() => { pushedFiles += 1 })
     }
+
+    const log = setInterval(() => {
+      logger.info(`Put files: ${pushedFiles}/${pathnames.length} (${(pushedFiles * 100 / pathnames.length).toFixed(2)}%)`)
+    }, 2000)
 
     return createQueue(pathnames.map(putFile)).flush()
       .catch(async (err) => {
@@ -191,6 +197,7 @@ const createBunnyEdgeStorageClient = (cdn: CDN, _logger: Logger): BunnyEdgeStora
         return Promise.reject(err)
       })
       .then(() => { /* noop */ })
+      .finally(() => clearInterval(log))
   }
 
   return {

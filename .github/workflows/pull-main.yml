@@ -1,0 +1,25 @@
+name: Main
+
+env:
+  context: './'
+  cache-name: cache-release
+  node-version: 18.x
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  prepare:
+    uses: mia-platform/cdn-publish/.github/workflows/prepare.yml@main
+
+  checks:
+    needs:
+      - prepare
+    uses: mia-platform/cdn-publish/.github/workflows/checks.yml@main
+
+  unit-tests:
+    needs:
+      - prepare
+    uses: mia-platform/cdn-publish/.github/workflows/unit-tests.yml@main

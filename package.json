@@ -1,7 +1,7 @@
 {
-  "name": "mystery-box",
+  "name": "@mia-platform/cdn-publish",
   "description": "A client for Mia's CDN storage API",
-  "version": "0.2.1",
+  "version": "0.0.0",
   "license": "SEE LICENSE IN LICENSE",
   "author": {
     "name": "Mia Platform Core Team",
@@ -11,6 +11,10 @@
     {
       "name": "Umberto Toniolo",
       "email": "umberto.toniolo@mia-platform.eu"
+    },
+    {
+      "name": "Alberto Moretti",
+      "email": "alberto.moretti@mia-platform.eu"
     }
   ],
   "type": "module",

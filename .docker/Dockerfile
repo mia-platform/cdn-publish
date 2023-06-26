@@ -9,8 +9,8 @@ RUN apk add --no-cache --upgrade libcrypto3 libssl3
 ARG COMMIT_SHA
 ARG VERSION=latest
 
-LABEL name="mystery-box" \
-      description="publish action for mia CDN service" \
+LABEL name="cdn-publish" \
+      description="A client for Mia's CDN storage API" \
       eu.mia-platform.url="https://www.mia-platform.eu" \
       eu.mia-platform.version=${VERSION}
 
@@ -22,7 +22,7 @@ COPY ./LICENSE ./LICENSE
 
 RUN npm i -g .
 
-RUN echo "mystery-box: $COMMIT_SHA" >> ./commit.sha
+RUN echo "cdn-publish: $COMMIT_SHA" >> ./commit.sha
 
 USER node
 

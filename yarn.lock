@@ -596,6 +596,51 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mia-platform/cdn-publish@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@mia-platform/cdn-publish@workspace:."
+  dependencies:
+    "@istanbuljs/esm-loader-hook": ^0.2.0
+    "@istanbuljs/nyc-config-typescript": ^1.0.2
+    "@ts-type/package-dts": ^2.0.8
+    "@types/chai": ^4.3.5
+    "@types/chai-as-promised": ^7.1.5
+    "@types/mocha": ^10.0.1
+    "@types/node": ^20.2.5
+    "@types/sinon": ^10.0.15
+    "@types/sinon-chai": ^3.2.9
+    "@types/temp": ^0.9.1
+    "@typescript-eslint/eslint-plugin": ^5.60.0
+    "@typescript-eslint/parser": ^5.60.0
+    axios: ^1.4.0
+    basic-ftp: ^5.0.3
+    chai: ^4.3.7
+    chai-as-promised: ^7.1.1
+    commander: ^10.0.1
+    cross-env: ^7.0.3
+    dotenv: ^16.3.1
+    esbuild: ^0.17.19
+    eslint: ^8.43.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-n: ^16.0.0
+    eslint-plugin-sort-keys-fix: ^1.1.2
+    eslint-plugin-typescript-sort-keys: ^2.3.0
+    glob: ^10.2.7
+    mocha: ^10.2.0
+    node-color-log: ^10.0.2
+    nyc: ^15.1.0
+    semver-regex: ^4.0.5
+    sinon: ^15.2.0
+    sinon-chai: ^3.7.0
+    source-map-support: ^0.5.21
+    temp: ^0.9.4
+    ts-node: ^10.9.1
+    typescript: ^5.1.3
+  bin:
+    mb: ./dist/index.cjs
+  languageName: unknown
+  linkType: soft
+
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -3765,51 +3810,6 @@ __metadata:
   checksum: aa92de608021b242401676e35cfa5aa42dd70cbdc082b916da7fb925c542173e36bce97ea3e804923fe92c0ad991434e4a38327e15a1b5b5f945d66df615ae6d
   languageName: node
   linkType: hard
-
-"mystery-box@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "mystery-box@workspace:."
-  dependencies:
-    "@istanbuljs/esm-loader-hook": ^0.2.0
-    "@istanbuljs/nyc-config-typescript": ^1.0.2
-    "@ts-type/package-dts": ^2.0.8
-    "@types/chai": ^4.3.5
-    "@types/chai-as-promised": ^7.1.5
-    "@types/mocha": ^10.0.1
-    "@types/node": ^20.2.5
-    "@types/sinon": ^10.0.15
-    "@types/sinon-chai": ^3.2.9
-    "@types/temp": ^0.9.1
-    "@typescript-eslint/eslint-plugin": ^5.60.0
-    "@typescript-eslint/parser": ^5.60.0
-    axios: ^1.4.0
-    basic-ftp: ^5.0.3
-    chai: ^4.3.7
-    chai-as-promised: ^7.1.1
-    commander: ^10.0.1
-    cross-env: ^7.0.3
-    dotenv: ^16.3.1
-    esbuild: ^0.17.19
-    eslint: ^8.43.0
-    eslint-plugin-import: ^2.27.5
-    eslint-plugin-n: ^16.0.0
-    eslint-plugin-sort-keys-fix: ^1.1.2
-    eslint-plugin-typescript-sort-keys: ^2.3.0
-    glob: ^10.2.7
-    mocha: ^10.2.0
-    node-color-log: ^10.0.2
-    nyc: ^15.1.0
-    semver-regex: ^4.0.5
-    sinon: ^15.2.0
-    sinon-chai: ^3.7.0
-    source-map-support: ^0.5.21
-    temp: ^0.9.4
-    ts-node: ^10.9.1
-    typescript: ^5.1.3
-  bin:
-    mb: ./dist/index.cjs
-  languageName: unknown
-  linkType: soft
 
 "nanoid@npm:3.3.3":
   version: 3.3.3

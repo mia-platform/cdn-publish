@@ -1,0 +1,46 @@
+name: Main
+
+env:
+  context: './'
+  cache-name: cache-release
+  node-version: 16.x
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/**'
+      - './package.json'
+      - 'src/**'
+      - 'tests/**'
+      - '.docker/**'
+
+jobs:
+  prepare:
+    uses: mia-platform/cdn-publish/.github/workflows/prepare.yml@main
+
+  checks:
+    needs:
+      - prepare
+    uses: mia-platform/cdn-publish/.github/workflows/checks.yml@main
+
+
+  unit-tests:
+    needs:
+      - prepare
+    uses: mia-platform/cdn-publish/.github/workflows/unit-tests.yml@main
+
+  release-docker:
+    needs:
+      - checks
+      - unit-tests
+    if: ${{ startsWith(github.ref, 'refs/heads/main') }}
+    uses: mia-platform/cdn-publish/.github/workflows/release-docker.yml@main
+    with:
+      version: latest
+      push: true
+    secrets:
+      username: ${{ secrets.BOT_DOCKER_USERNAME }}
+      token: ${{ secrets.BOT_DOCKER_TOKEN }}

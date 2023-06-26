@@ -1,6 +1,3 @@
-import { readFileSync } from 'fs'
-
-import type IPackageJson from '@ts-type/package-dts'
 import { Command } from 'commander'
 
 import deleteFn from './commands/delete.js'
@@ -12,18 +9,14 @@ import { absoluteResolve } from './glob.js'
 import type { Logger } from './logger.js'
 import type { Global } from './types'
 
-const packageJSON = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), { encoding: 'utf8' })) as IPackageJson
-
 export const createCommand = async (argv: string[], global: Global, logger: Logger) => {
   const config = { global, logger, workingDir: absoluteResolve('.') }
-  const { description = '', version = '' } = packageJSON('../package.json')
 
   const program = new Command()
   program.exitOverride()
   program
     .name('mb')
-    .description(description)
-    .version(version)
+    .description('A client for Mia\'s CDN storage API')
     .configureOutput({
       writeErr: (str) => logger.log(str),
     })

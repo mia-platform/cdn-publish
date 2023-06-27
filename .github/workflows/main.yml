@@ -12,8 +12,8 @@ on:
       - main
     paths:
       - '.github/workflows/**'
-      - './package.json'
-      - './yarn.lock'
+      - 'package.json'
+      - 'yarn.lock'
       - 'src/**'
       - 'tests/**'
       - '.docker/**'

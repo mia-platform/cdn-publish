@@ -53,6 +53,33 @@ and then
 cdn [options] [command]
 ```
 
+### GitHub Action
+
+In a GitHub workflow, the _CDN publish_ CLI can be called by running its container as per the following snippet
+
+```yaml
+cdn-release:
+  needs:
+    []
+    # 👆 your dependencies
+  name: Release on CDN
+  runs-on: ubuntu-latest
+
+  steps:
+   - name: Use Node.js 18
+     uses: actions/setup-node@v3
+     with:
+       node-version: 18
+
+    - name: Install CDN Publish CLI
+      run: npm i -g @mia-platform/cdn-publish
+
+    # ... steps to build or download artifact
+
+    - name: Publish to Mia CDN
+      run: cdn publish -k "$STORAGE_ACCESS_KEY" -s "$STORAGE-ZONE"
+```
+
 ### GitLab job
 
 In a GitLab CI, the _CDN publish_ CLI can be called by running its container as per the following snippet

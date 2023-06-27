@@ -194,8 +194,8 @@ with options:
 - `-s`, `--storage-zone-name` -- **required**, the `storageZoneName`
 - `-u`, `--base-url` -- the api base url, default is: `https://storage.bunnycdn.com`
 - `-p`, `--project` -- used to override the location of the `package.json` file. Useful for repositories with workspaces
-- `-s`, `--scope` -- a directory to prepend to all pushed files. Defaults to the `package.json`'s `name` field matched against `/^@([^/]+)\//`
 - `-b`, `--batch-size` -- number of files to be uploaded concurrently
+- `--scope` -- a directory to prepend to all pushed files. Defaults to the `package.json`'s `name` field matched against `/^@([^/]+)\//`
 - `--override-version [string]` -- in case the pushed context is sem-versioned, allows to opt-out of the client no-double-push policy on semver packages.
 - `--checksum` -- requires the [server](https://docs.bunny.net/reference/put_-storagezonename-path-filename) to fail the push if uploaded file has a checksum that does not match with the one computed on the client side.
 

@@ -132,6 +132,14 @@ describe('publish project', () => {
       )).to.be.eventually.rejectedWith(cliErrorUnknownOption('--projectt', '--project'))
     })
 
+    it('--scope <string>', async () => {
+      await expect(createCommand(
+        buildCommandArguments([...baseCommand, ...baseArgs, '--scopee', 'test']),
+        global,
+        loggerStub
+      )).to.be.eventually.rejectedWith(cliErrorUnknownOption('--scopee', '--scope'))
+    })
+
     it('-b, --batch-size <number>', async () => {
       await expect(createCommand(
         buildCommandArguments([...baseCommand, ...baseArgs, '--batch-sizet', 'test']),

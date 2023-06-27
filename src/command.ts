@@ -43,7 +43,7 @@ export const createCommand = async (argv: string[], global: Global, logger: Logg
     .option('-u, --base-url <string>', 'base url to make API calls to', 'https://storage.bunnycdn.com')
     .option('-p, --project <string>', 'location of the package.json file', 'package.json')
     .option(
-      '-s, --scope <string>',
+      '--scope <string>',
       'scope of the package, '
         + 'when not specified package.json `name` is parsed against /^@([^/]+)\\//',
     )

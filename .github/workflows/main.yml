@@ -13,6 +13,7 @@ on:
     paths:
       - '.github/workflows/**'
       - './package.json'
+      - './yarn.lock'
       - 'src/**'
       - 'tests/**'
       - '.docker/**'

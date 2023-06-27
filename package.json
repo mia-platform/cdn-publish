@@ -32,7 +32,7 @@
     "check-types": "tsc --noEmit",
     "coverage": "cross-env 'NODE_OPTIONS=--experimental-loader @istanbuljs/esm-loader-hook' nyc mocha \"tests/**/*.test.ts\"",
     "cli:run": "ts-node --esm src/index.ts",
-    "build": "esbuild src/index.ts --bundle --platform=node --outfile=dist/index.cjs --banner:js='#!/usr/bin/env node'"
+    "build": "ts-node --esm scripts/build.ts"
   },
   "dependencies": {
     "axios": "^1.4.0",

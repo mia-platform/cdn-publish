@@ -18,13 +18,16 @@ provides opinionated behaviors that make the put/patch API look like `npm publis
 
 ## `npm`-like behaviors
 
-When we reference `npm publish` we also refer to the `yarn` wrapper for `yarn 2+` which is an opinionated wrapper
-of `npm publish` which does not change the behaviors and functionality discussed here
+_CDN publish_ implements an `npm publish`-like behavior.
+When we reference `npm publish` we also refer to the `yarn` wrapper for `yarn 2+`.
+The most notable behaviours are:
 
 1. `npm publish` will use the `package.json` file available in the working directory to establish:
    1. which files to push -> [`files` key](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#files)
    2. the scope of your package by using the [`name` key](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#name) first slice before a `/` which most often starts with an `@` sign.
 2. `npmjs` registry does not allow to PUT twice the same [`semver` version](https://semver.org/spec/v2.0.0.html) of a package, like `0.1.0` or `3.0.10-rc2`. Although we cannot enforce it on the file storage API, _CDN publish_ enforces it (with possibility to override) on the client side. This is useful to avoid incorrect CI runs.
+
+_CDN publish_ behaves in the exact same fashion.
 
 ## How to use it
 

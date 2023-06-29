@@ -40,6 +40,7 @@ jobs:
 
   integration-tests:
     strategy:
+      max-parallel: 1
       fail-fast: false
       matrix:
         node-version: [16.x, 18.x]

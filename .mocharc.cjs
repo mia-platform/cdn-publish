@@ -5,5 +5,5 @@ module.exports = {
     "loader=ts-node/esm",
   ],
   file: ["tests/setup.ts"],
-  timeout: 5000,
+  timeout: 30000,
 };

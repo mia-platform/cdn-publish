@@ -11,15 +11,15 @@ import { createSandbox } from 'sinon'
 import sinonChai from 'sinon-chai'
 
 
-import { createCdnContext } from '../src/cdn.js'
-import { createBunnyEdgeStorageClient } from '../src/clients/bunny-edge-storage.js'
-import { createHttpClient } from '../src/clients/http-client.js'
-import MysteryBoxError from '../src/error.js'
-import { absoluteResolve } from '../src/glob.js'
-import type { FileContext, LoadingContext } from '../src/types.js'
+import { createCdnContext } from '../../src/cdn.js'
+import { createBunnyEdgeStorageClient } from '../../src/clients/bunny-edge-storage.js'
+import { createHttpClient } from '../../src/clients/http-client.js'
+import MysteryBoxError from '../../src/error.js'
+import { absoluteResolve } from '../../src/glob.js'
+import type { FileContext, LoadingContext } from '../../src/types.js'
 
-import { accessKey, serverStorageBaseUrl, storageZoneName } from './server.js'
-import { createResources, createTmpDir, loggerStub, noop, sha256 } from './utils.js'
+import { accessKey, serverStorageBaseUrl, storageZoneName } from './../server.js'
+import { createResources, createTmpDir, loggerStub, noop, sha256 } from './../utils.js'
 
 interface Context extends MochaContext {
   currentTest?: MochaContext['currentTest'] & {sandbox?: SinonSandbox}

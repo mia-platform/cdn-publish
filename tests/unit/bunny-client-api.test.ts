@@ -6,13 +6,13 @@ import type { SinonSandbox } from 'sinon'
 import { createSandbox } from 'sinon'
 import sinonChai from 'sinon-chai'
 
-import { createCdnContext } from '../src/cdn.js'
-import type { PullZoneMeta } from '../src/clients/bunny-api.js'
-import { creatBunnyApiClient } from '../src/clients/bunny-api.js'
+import { createCdnContext } from '../../src/cdn.js'
+import type { PullZoneMeta } from '../../src/clients/bunny-api.js'
+import { creatBunnyApiClient } from '../../src/clients/bunny-api.js'
 
 
-import { accessKey, bunny } from './server.js'
-import { loggerStub } from './utils.js'
+import { accessKey, bunny } from './../server.js'
+import { loggerStub } from './../utils.js'
 
 interface Context extends MochaContext {
     currentTest?: MochaContext['currentTest'] & {sandbox?: SinonSandbox}

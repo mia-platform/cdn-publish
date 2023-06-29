@@ -4,7 +4,8 @@ import fs from 'fs'
 
 import { expect, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { before, describe, it } from 'mocha'
+import type { Context as MochaContext } from 'mocha'
+import { afterEach, beforeEach, describe, it } from 'mocha'
 
 import { createCdnContext } from '../../src/cdn.js'
 import { createBunnyEdgeStorageClient } from '../../src/clients/bunny-edge-storage.js'
@@ -12,12 +13,16 @@ import MysteryBoxError from '../../src/error.js'
 import { absoluteResolve } from '../../src/glob.js'
 import type { LoadingContext } from '../../src/types.js'
 
-import { storageAccessKey, serverStorageBaseUrl, storageZoneName, indexChecksum, index } from './../server.js'
-import { clearE2EtestDirectory, createE2EtestPath, createResources, createTmpDir, loggerStub, sha256 } from './../utils.js'
+import { storageAccessKey, serverStorageBaseUrl, storageZoneName, indexChecksum, index, createServer } from './../server.js'
+import { createE2EtestPath, createResources, createTmpDir, loggerStub, sha256 } from './../utils.js'
+
+interface Context extends MochaContext {
+  cleanup?: () => void | PromiseLike<void> | Promise<void>
+}
 
 use(chaiAsPromised)
 
-describe('E2E: bunny edge storage cdn client', () => {
+describe('bunny edge storage cdn client', () => {
   const cdnCtx = createCdnContext(storageAccessKey, {
     server: serverStorageBaseUrl,
     storageZoneName,
@@ -25,8 +30,8 @@ describe('E2E: bunny edge storage cdn client', () => {
   const client = createBunnyEdgeStorageClient(cdnCtx, loggerStub)
   const sharedFile = 'index.txt'
 
-  before(async () => {
-    await clearE2EtestDirectory(cdnCtx)
+  beforeEach(async function (this: Context) {
+    this.cleanup = await createServer()
     const cdnPath = createE2EtestPath('/0.0.0')
     await client.put(
       cdnPath,
@@ -54,6 +59,10 @@ describe('E2E: bunny edge storage cdn client', () => {
       ],
       false
     )
+  })
+
+  afterEach(async function (this: Context) {
+    await this.cleanup?.()
   })
 
   it('should get a list of files', async () => {
@@ -138,10 +147,6 @@ describe('E2E: bunny edge storage cdn client', () => {
     const resource = 'index.html'
     const tmpCtx = await createTmpDir(createResources([resource]))
     const cdnPath = createE2EtestPath('/1.0.0/')
-
-    // Sometimes it happens that the cdn doesn't correctly clear the folder, it is a bunnyCdn bug
-    await clearE2EtestDirectory(cdnCtx)
-    await client.delete(cdnPath, './index.html', true)
 
     await expect(
       client.put(

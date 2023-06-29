@@ -1,4 +1,9 @@
+import fs from 'fs/promises'
+import path from 'path'
 
+import { stub } from 'sinon'
+
+import { createIntegrationCtx } from './utils.js'
 
 // ----------- 0.0.0/
 const index = '<!DOCTYPE html><html></html>'
@@ -118,6 +123,125 @@ const bunny = {
   response404,
   responseDelete200,
 }
+
+const stringifyUrl = (url: URL | RequestInfo) => (
+  // eslint-disable-next-line no-nested-ternary
+  url instanceof URL
+    ? url.href
+    : (
+      url instanceof Request
+        ? url.url
+        : url
+    )
+)
+
+const createServer = async () => {
+  /**
+   *  __test/
+   *    file0.txt
+   *    file1.txt
+   *    0.0.0/
+   *      index.html
+   *    1.0.0/
+   *      <empty>
+   */
+  const tmpCtx = await createIntegrationCtx()
+
+  const serverStub = stub(global, 'fetch').callsFake(async (url: URL | RequestInfo, config?: RequestInit) => {
+    const { method, headers } = config ?? {}
+
+    const headersParse = headers as Record<string, string> | undefined
+    const stringifiedUrl = stringifyUrl(url)
+    const href = stringifiedUrl.match(/(?<href>\/__test\/.*)$/)?.groups?.href ?? undefined
+    const res404 = new Promise<Response>((res) => res(new Response(JSON.stringify(response404), { headers: headers404, status: 404 })))
+    const res401 = new Promise<Response>((res) => res(new Response(JSON.stringify(response401), { headers: headers401, status: 401 })))
+    const getFile = async (filepath: string) => fs.readFile(path.join(tmpCtx.repositoryCtx.name, filepath), { encoding: 'utf-8' })
+    const createDir = async (filepath: string) => fs.mkdir(path.join(tmpCtx.repositoryCtx.name, path.dirname(filepath)), { recursive: true })
+    const writeFile = async (filepath: string, file: string) => fs.writeFile(path.join(tmpCtx.repositoryCtx.name, filepath), file)
+    const isDir = async (filepath: string) => (await fs.lstat(path.join(tmpCtx.repositoryCtx.name, filepath))).isDirectory()
+    const filepathExists = async (filepath: string) => {
+      try {
+        await fs.stat(path.join(tmpCtx.repositoryCtx.name, filepath))
+        return true
+      } catch {
+        return false
+      }
+    }
+
+    const deleteFilepath = async (filepath: string) => fs.rm(path.join(tmpCtx.repositoryCtx.name, filepath), { recursive: true })
+    const readDir = async (filepath: string) => {
+      try {
+        const basePath = path.join(tmpCtx.repositoryCtx.name, filepath)
+        return (await fs.readdir(basePath))
+          .map(file => ({ ...baseFile,
+            IsDirectory: isDir(path.join(filepath, file)),
+            ObjectName: file,
+            Path: path.join(filepath, file),
+          }))
+      } catch (err) {
+        return []
+      }
+    }
+
+    if (href === undefined) {
+      return res404
+    }
+
+    if (headersParse?.AccessKey !== storageAccessKey) {
+      return res401
+    }
+
+    // getters
+    if (method === 'GET') {
+      if (href.endsWith('/')) {
+        const dirContent = await readDir(href)
+        const json = JSON.stringify(dirContent)
+        return new Promise((res) => res(new Response(json, { headers: headers200, status: 200 })))
+      }
+
+      if (headersParse.Accept === '*/*') {
+        if (await filepathExists(href)) {
+          const file = await getFile(href)
+          return new Promise((res) => res(new Response(
+            file,
+            { headers: { ...headers200, 'Content-Type': 'text/plain' }, status: 200 }
+          )))
+        }
+        return res404
+      }
+    }
+
+    // delete
+    if (method === 'DELETE') {
+      if (await filepathExists(href)) {
+        await deleteFilepath(href)
+        return new Promise((res) => res(new Response(
+          JSON.stringify(responseDelete200), { headers: headers200, status: 200 }
+        )))
+      }
+      return res404
+    }
+
+    // put
+    if (method === 'PUT') {
+      const file = config?.body?.toString()
+      if (!file) {
+        return new Promise((res) => res(new Response(JSON.stringify(response400), { headers: headers400, status: 400 })))
+      }
+      await createDir(href)
+      await writeFile(href, file)
+      return new Promise((res) => res(new Response(JSON.stringify(response201), { headers: headers201, status: 201 })))
+    }
+
+    return res404
+  })
+
+  return async () => {
+    serverStub.restore()
+    await tmpCtx.repositoryCtx.cleanup()
+  }
+}
+
 export {
   indexHash,
   storageAccessKey,
@@ -128,4 +252,5 @@ export {
   serverApiBaseUrl,
   indexChecksum,
   index,
+  createServer,
 }

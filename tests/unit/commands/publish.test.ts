@@ -1,6 +1,7 @@
 import { expect, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { before, describe, it } from 'mocha'
+import { afterEach, beforeEach, describe, it } from 'mocha'
+import type { Context as MochaContext } from 'mocha'
 
 import { createCdnContext } from '../../../src/cdn.js'
 import { createBunnyEdgeStorageClient } from '../../../src/clients/bunny-edge-storage.js'
@@ -8,12 +9,16 @@ import { createCommand } from '../../../src/command.js'
 import { absoluteResolve } from '../../../src/glob.js'
 import type { RelPath } from '../../../src/types.js'
 import { PACKAGE_JSON_FILENAME } from '../../consts.js'
-import { storageAccessKey, storageZoneName, serverStorageBaseUrl } from '../../server.js'
-import { buildCommandArguments, clearE2EtestDirectory, cliErrorMissingArgument, cliErrorRequiredOption, cliErrorUnknownOption, createIntegrationCtx, loggerStub } from '../../utils.js'
+import { storageAccessKey, storageZoneName, serverStorageBaseUrl, createServer } from '../../server.js'
+import { buildCommandArguments, cliErrorMissingArgument, cliErrorRequiredOption, cliErrorUnknownOption, createIntegrationCtx, loggerStub } from '../../utils.js'
+
+interface Context extends MochaContext {
+  cleanup?: () => void | PromiseLike<void> | Promise<void>
+}
 
 use(chaiAsPromised)
 
-describe('E2E: publish project', () => {
+describe('publish project', () => {
   const cdnCtx = createCdnContext(storageAccessKey, {
     server: serverStorageBaseUrl,
     storageZoneName,
@@ -22,8 +27,12 @@ describe('E2E: publish project', () => {
   const baseCommand = ['publish']
   const baseArgs = ['-k', storageAccessKey, '-s', storageZoneName]
 
-  before(async () => {
-    await clearE2EtestDirectory(cdnCtx)
+  beforeEach(async function (this: Context) {
+    this.cleanup = await createServer()
+  })
+
+  afterEach(async function (this: Context) {
+    await this.cleanup?.()
   })
 
   describe('should have those arguments', () => {
@@ -102,6 +111,7 @@ describe('E2E: publish project', () => {
     it('should push empty senver package', async () => {
       const { repositoryCtx, createCdnPath } = await createIntegrationCtx()
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
+
       await expect(createCommand(
         buildCommandArguments([...baseCommand, ...baseArgs, '--project', projectPath]),
         global,
@@ -174,11 +184,6 @@ describe('E2E: publish project', () => {
       const version = '3.0.0'
       const { repositoryCtx, createCdnPath } = await createIntegrationCtx({ version })
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
-      const cdnRepositoryPath = createCdnPath()
-
-      // Sometimes it happens that the cdn doesn't correctly clear the folder, it is a bunnyCdn bug
-      await client.delete(cdnRepositoryPath, './index.html', true)
-      await client.delete(cdnRepositoryPath, './package.json', true)
 
       await expect(createCommand(
         buildCommandArguments([...baseCommand, ...baseArgs, '--project', projectPath, '--override-version']),
@@ -186,10 +191,12 @@ describe('E2E: publish project', () => {
         loggerStub
       )).to.be.eventually.fulfilled
 
+      const cdnRepositoryPath = createCdnPath()
       await expect(client.list(cdnRepositoryPath))
         .to.eventually.be.fulfilled.and.to.have.length(2)
 
       await repositoryCtx.cleanup()
+
 
       const newFiles = ['a.js', 'b.js', 'c.js']
       const { repositoryCtx: repositoryCtxUpdate } = await createIntegrationCtx({

@@ -29,6 +29,7 @@ jobs:
 
   unit-tests:
     strategy:
+      fail-fast: false
       matrix:
         node-version: [16.x, 18.x]
     needs:
@@ -39,6 +40,7 @@ jobs:
 
   integration-tests:
     strategy:
+      fail-fast: false
       matrix:
         node-version: [16.x, 18.x]
     needs:
@@ -55,6 +57,7 @@ jobs:
     needs:
       - checks
       - unit-tests
+      - integration-tests
     if: ${{ startsWith(github.ref, 'refs/heads/main') }}
     uses: mia-platform/cdn-publish/.github/workflows/release-docker.yml@main
     with:

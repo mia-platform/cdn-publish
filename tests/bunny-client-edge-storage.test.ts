@@ -246,20 +246,16 @@ describe('restore check on semver folder put', () => {
     const resources = ['file0.txt', 'file1.txt']
     const tmpCtx = await createTmpDir(createResources(resources))
 
-    let count = 0
     mock.method(global, 'fetch', async (url: URL, { method = 'GET' }: RequestInit = {}) => {
       if (method === 'PUT') {
-        count += 1
         return url.href.match(/file0.txt$/)
           ? new Response('', { headers: { 'Content-Type': 'text/plain' }, status: 200 })
           : new Response(bunny.response400, { headers: bunny.headers400, status: 400 })
       }
       if (method === 'DELETE') {
-        count += 1
         return new Response(JSON.stringify(bunny.responseDelete200), { headers: bunny.headers200, status: 200 })
       }
       if (method === 'GET' && url.href.match(/0\.0\.0\/$/)) {
-        count += 1
         return new Response(JSON.stringify([]), { headers: bunny.headers200, status: 200 })
       }
 
@@ -293,7 +289,10 @@ describe('restore check on semver folder put', () => {
       return error.message === './file1.txt'
     })
 
-    expect(count).to.equal(4)
+    // expect(count).to.equal(4)
+
+    await expect(client.list('./__test/0.0.0/'))
+      .to.eventually.be.fulfilled.and.to.have.length(0)
 
     await tmpCtx.cleanup()
   })

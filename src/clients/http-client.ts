@@ -64,7 +64,7 @@ const serializeInput = (data: unknown): BodyInit | null | undefined => {
   }
 
   if (data instanceof Buffer) {
-    return new Blob([data])
+    return data
   }
 
   throw new MysteryBoxError(Error.BodyNotOk, 'cannot parse this type of body', undefined)
@@ -77,7 +77,7 @@ const serializeInput = (data: unknown): BodyInit | null | undefined => {
  * @returns {HttpClient} an instance of an HttpClient
  */
 const createHttpClient = (clientConfig: HttpClientConfig): HttpClient => {
-  async function clientFetch(url: string, method?: 'GET' | 'PUT' | 'POST' | 'DELETE', { data, ...config }: RequestConfig = {}, retries = 3, delay = 1000):
+  async function clientFetch(url: string, method?: 'GET' | 'PUT' | 'POST' | 'DELETE', { data, keepalive = true, ...config }: RequestConfig = {}, retries = 3, delay = 1000):
       Promise<Response> {
     return fetch(
       new URL(url, clientConfig.baseURL),
@@ -88,6 +88,7 @@ const createHttpClient = (clientConfig: HttpClientConfig): HttpClient => {
           ...clientConfig.headers,
           ...config.headers,
         },
+        keepalive,
         method,
       }
     ).catch(async (err) => {

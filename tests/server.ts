@@ -210,7 +210,7 @@ const createServer = async () => {
 
     // put
     if (method === 'PUT') {
-      const file = await ((config.body as unknown as Response).text())
+      const file = config.body?.toString()
       if (!file) {
         return new Response(JSON.stringify(response400), { headers: headers400, status: 400 })
       }

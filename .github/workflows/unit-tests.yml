@@ -19,14 +19,14 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
           cache: yarn
-      
+
       - name: Install
         run: yarn install --immutable
 
       - name: Run unit tests
         run: yarn coverage
 
-      - name: 'Upload Artifact'
+      - name: "Upload Artifact"
         uses: actions/upload-artifact@v3
         with:
           name: coverage

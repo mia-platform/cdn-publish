@@ -16,6 +16,7 @@
 import { exit } from 'process'
 
 import { CommanderError } from 'commander'
+import 'isomorphic-fetch'
 
 import { createCommand } from './command.js'
 import MysteryBoxError from './error.js'

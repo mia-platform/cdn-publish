@@ -1,21 +1,14 @@
-/* eslint-disable no-sync */
-
-/* eslint-disable no-nested-ternary */
-import fs from 'fs'
-import { mock } from 'node:test'
+import fs from 'fs/promises'
 import path from 'path'
 
+import { stub } from 'sinon'
 
-import { createTmpDir } from './utils.js'
-
-// ----------- __test/
-const file0 = Buffer.from('file0.txt', 'binary')
-const file1 = Buffer.from('file0.txt', 'binary')
-// -------------------
+import { createIntegrationCtx } from './utils.js'
 
 // ----------- 0.0.0/
-const index = Buffer.from('<!DOCTYPE html><html></html>', 'binary')
+const index = '<!DOCTYPE html><html></html>'
 const indexHash = 'DC284EB4FBD61E7590A543C85622A91DDD8F8E2E20C58A14C3620D57394DBE1A'
+const indexChecksum = '1623f1d081160d976dd6588373dd6e73e24af9a6ff056a653ebd0fba2f355bcd'
 // -------------------
 
 // 200 put / delete
@@ -93,20 +86,11 @@ const response404 = {
 }
 const headers404 = headers200
 
-const stringifyUrl = (url: URL | RequestInfo) => (
-  url instanceof URL
-    ? url.href
-    : (
-      url instanceof Request
-        ? url.url
-        : url
-    )
-)
-
-const storageAccessKey = 'secret'
-const accessKey = 'secret'
-const storageZoneName = 'mia-platform-test'
-const serverBaseUrl = 'http://server'
+const storageAccessKey = process.env.CDN_STORAGE_ACCESS_KEY ?? 'secret'
+const accessKey = process.env.CDN_ACCESS_KEY ?? 'secret'
+const storageZoneName = process.env.CDN_STORAGE_ZONE_NAME ?? 'mia-platform-test'
+const serverStorageBaseUrl = process.env.CDN_STORAGE_BASE_URL ?? 'http://server'
+const serverApiBaseUrl = process.env.CDN_API_BASE_URL ?? 'http://server'
 
 const baseFile = {
   ArrayNumber: 0,
@@ -126,6 +110,31 @@ const baseFile = {
   UserId: '',
 }
 
+const bunny = {
+  headers200,
+  headers201,
+  headers204,
+  headers400,
+  headers401,
+  headers404,
+  response201,
+  response400,
+  response401,
+  response404,
+  responseDelete200,
+}
+
+const stringifyUrl = (url: URL | RequestInfo) => (
+  // eslint-disable-next-line no-nested-ternary
+  url instanceof URL
+    ? url.href
+    : (
+      url instanceof Request
+        ? url.url
+        : url
+    )
+)
+
 const createServer = async () => {
   /**
    *  __test/
@@ -136,30 +145,34 @@ const createServer = async () => {
    *    1.0.0/
    *      <empty>
    */
-  const tmpCtx = await createTmpDir({
-    '__test/0.0.0/index.html': index,
-    '__test/file0.txt': file0,
-    '__test/file1.txt': file1,
-  })
+  const tmpCtx = await createIntegrationCtx()
 
+  const serverStub = stub(global, 'fetch').callsFake(async (url: URL | RequestInfo, config?: RequestInit) => {
+    const { method, headers } = config ?? {}
 
-  mock.method(global, 'fetch', async (url: URL | RequestInfo, config: RequestInit = { }) => {
+    const headersParse = headers as Record<string, string> | undefined
     const stringifiedUrl = stringifyUrl(url)
     const href = stringifiedUrl.match(/(?<href>\/__test\/.*)$/)?.groups?.href ?? undefined
-    const { method = 'GET' } = config
-    const res404 = new Response(JSON.stringify(response404), { headers: headers404, status: 404 })
-    const res401 = new Response(JSON.stringify(response401), { headers: headers401, status: 401 })
-    const headers = config.headers as Record<string, string> | undefined
-    const getFile = (filepath: string) => fs.readFileSync(path.join(tmpCtx.name, filepath))
-    const createDir = (filepath: string) => fs.mkdirSync(path.join(tmpCtx.name, path.dirname(filepath)), { recursive: true })
-    const writeFile = (filepath: string, file: string) => fs.writeFileSync(path.join(tmpCtx.name, filepath), file)
-    const isDir = (filepath: string) => fs.lstatSync(path.join(tmpCtx.name, filepath)).isDirectory()
-    const filepathExists = (filepath: string) => fs.existsSync(path.join(tmpCtx.name, filepath))
-    const deleteFilepath = (filepath: string) => fs.rmSync(path.join(tmpCtx.name, filepath), { recursive: true })
-    const readDir = (filepath: string) => {
+    const res404 = new Promise<Response>((res) => res(new Response(JSON.stringify(response404), { headers: headers404, status: 404 })))
+    const res401 = new Promise<Response>((res) => res(new Response(JSON.stringify(response401), { headers: headers401, status: 401 })))
+    const getFile = async (filepath: string) => fs.readFile(path.join(tmpCtx.repositoryCtx.name, filepath), { encoding: 'utf-8' })
+    const createDir = async (filepath: string) => fs.mkdir(path.join(tmpCtx.repositoryCtx.name, path.dirname(filepath)), { recursive: true })
+    const writeFile = async (filepath: string, file: string) => fs.writeFile(path.join(tmpCtx.repositoryCtx.name, filepath), file)
+    const isDir = async (filepath: string) => (await fs.lstat(path.join(tmpCtx.repositoryCtx.name, filepath))).isDirectory()
+    const filepathExists = async (filepath: string) => {
       try {
-        const basePath = path.join(tmpCtx.name, filepath)
-        return fs.readdirSync(basePath)
+        await fs.stat(path.join(tmpCtx.repositoryCtx.name, filepath))
+        return true
+      } catch {
+        return false
+      }
+    }
+
+    const deleteFilepath = async (filepath: string) => fs.rm(path.join(tmpCtx.repositoryCtx.name, filepath), { recursive: true })
+    const readDir = async (filepath: string) => {
+      try {
+        const basePath = path.join(tmpCtx.repositoryCtx.name, filepath)
+        return (await fs.readdir(basePath))
           .map(file => ({ ...baseFile,
             IsDirectory: isDir(path.join(filepath, file)),
             ObjectName: file,
@@ -174,24 +187,25 @@ const createServer = async () => {
       return res404
     }
 
-    if (headers?.AccessKey !== storageAccessKey) {
+    if (headersParse?.AccessKey !== storageAccessKey) {
       return res401
     }
 
     // getters
     if (method === 'GET') {
       if (href.endsWith('/')) {
-        const dirContent = readDir(href)
+        const dirContent = await readDir(href)
         const json = JSON.stringify(dirContent)
-        return new Response(json, { headers: headers200, status: 200 })
+        return new Promise((res) => res(new Response(json, { headers: headers200, status: 200 })))
       }
 
-      if (headers.Accept === '*/*') {
-        if (filepathExists(href)) {
-          return new Response(
-            getFile(href),
+      if (headersParse.Accept === '*/*') {
+        if (await filepathExists(href)) {
+          const file = await getFile(href)
+          return new Promise((res) => res(new Response(
+            file,
             { headers: { ...headers200, 'Content-Type': 'text/plain' }, status: 200 }
-          )
+          )))
         }
         return res404
       }
@@ -199,54 +213,44 @@ const createServer = async () => {
 
     // delete
     if (method === 'DELETE') {
-      if (filepathExists(href)) {
-        deleteFilepath(href)
-        return new Response(
+      if (await filepathExists(href)) {
+        await deleteFilepath(href)
+        return new Promise((res) => res(new Response(
           JSON.stringify(responseDelete200), { headers: headers200, status: 200 }
-        )
+        )))
       }
       return res404
     }
 
     // put
     if (method === 'PUT') {
-      const file = await ((config.body as unknown as Response).text())
+      const file = config?.body?.toString()
       if (!file) {
-        return new Response(JSON.stringify(response400), { headers: headers400, status: 400 })
+        return new Promise((res) => res(new Response(JSON.stringify(response400), { headers: headers400, status: 400 })))
       }
-      createDir(href)
-      writeFile(href, file)
-      return new Response(JSON.stringify(response201), { headers: headers201, status: 201 })
+      await createDir(href)
+      await writeFile(href, file)
+      return new Promise((res) => res(new Response(JSON.stringify(response201), { headers: headers201, status: 201 })))
     }
 
     return res404
   })
 
   return async () => {
-    mock.restoreAll()
-    await tmpCtx.cleanup()
+    serverStub.restore()
+    await tmpCtx.repositoryCtx.cleanup()
   }
 }
 
-const bunny = {
-  headers200,
-  headers201,
-  headers204,
-  headers400,
-  headers401,
-  headers404,
-  response201,
-  response400,
-  response401,
-  response404,
-  responseDelete200,
-}
 export {
-  createServer,
   indexHash,
   storageAccessKey,
   accessKey,
   bunny,
   storageZoneName,
-  serverBaseUrl,
+  serverStorageBaseUrl,
+  serverApiBaseUrl,
+  indexChecksum,
+  index,
+  createServer,
 }

@@ -1,8 +1,8 @@
 import { expect } from 'chai'
 import { describe, it } from 'mocha'
 
-import { createCdnContext } from '../src/cdn.js'
-import MysteryBoxError from '../src/error.js'
+import { createCdnContext } from '../../src/cdn.js'
+import MysteryBoxError from '../../src/error.js'
 
 describe('get all files from glob tests', () => {
   it('should throw on incorrect url', () => {

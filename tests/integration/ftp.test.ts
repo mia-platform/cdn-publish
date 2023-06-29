@@ -4,7 +4,7 @@ import path from 'path'
 import * as ftp from 'basic-ftp'
 import { describe, it } from 'mocha'
 
-import { createTmpDir } from './utils.js'
+import { createTmpDir } from './../utils.js'
 
 describe.skip('ftp tests', () => {
   it('e2e DONT USE', async function (this) {

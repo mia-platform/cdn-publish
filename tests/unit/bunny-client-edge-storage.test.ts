@@ -1,0 +1,259 @@
+
+/* eslint-disable @typescript-eslint/require-await */
+import fs from 'fs'
+
+import { expect, use } from 'chai'
+import chaiAsPromised from 'chai-as-promised'
+import type { Context as MochaContext } from 'mocha'
+import { afterEach, beforeEach, describe, it } from 'mocha'
+
+import { createCdnContext } from '../../src/cdn.js'
+import { createBunnyEdgeStorageClient } from '../../src/clients/bunny-edge-storage.js'
+import MysteryBoxError from '../../src/error.js'
+import { absoluteResolve } from '../../src/glob.js'
+import type { LoadingContext } from '../../src/types.js'
+
+import { storageAccessKey, serverStorageBaseUrl, storageZoneName, indexChecksum, index, createServer } from './../server.js'
+import { createE2EtestPath, createResources, createTmpDir, loggerStub, sha256 } from './../utils.js'
+
+interface Context extends MochaContext {
+  cleanup?: () => void | PromiseLike<void> | Promise<void>
+}
+
+use(chaiAsPromised)
+
+describe('bunny edge storage cdn client', () => {
+  const cdnCtx = createCdnContext(storageAccessKey, {
+    server: serverStorageBaseUrl,
+    storageZoneName,
+  })
+  const client = createBunnyEdgeStorageClient(cdnCtx, loggerStub)
+  const sharedFile = 'index.txt'
+
+  beforeEach(async function (this: Context) {
+    this.cleanup = await createServer()
+    const cdnPath = createE2EtestPath('/0.0.0')
+    await client.put(
+      cdnPath,
+      [
+        {
+          absolutePath: absoluteResolve('./', sharedFile),
+          loader: async () => {
+            return {
+              buffer: Buffer.from(index, 'binary'),
+              checksum: indexChecksum,
+            }
+          },
+          pathname: `./${sharedFile}`,
+        },
+        {
+          absolutePath: absoluteResolve('./', 'foo.txt'),
+          loader: async () => {
+            return {
+              buffer: Buffer.from('bar', 'binary'),
+              checksum: sha256(Buffer.from('bar', 'binary')),
+            }
+          },
+          pathname: `./foo.txt`,
+        },
+      ],
+      false
+    )
+  })
+
+  afterEach(async function (this: Context) {
+    await this.cleanup?.()
+  })
+
+  it('should get a list of files', async () => {
+    const cdnPath = createE2EtestPath('/0.0.0')
+    await expect(client.list(cdnPath))
+      .to.eventually.be.fulfilled.and.to.have.length(2)
+  })
+
+  it('should fail to get a single file if not exists', async () => {
+    const cdnPath = createE2EtestPath('/0.0.0/notExistingFile.json')
+
+    await expect(client.get(cdnPath))
+      .to.eventually.be.rejected.and.satisfies((error: unknown) => {
+        if (!(error instanceof MysteryBoxError)) {
+          return false
+        }
+
+        if (!(error.cause instanceof Response)) {
+          return false
+        }
+
+        expect(error.cause).to.have.property('ok', false)
+        expect(error.cause).to.have.property('status', 404)
+
+        return true
+      })
+  })
+
+  it('should get a single file', async () => {
+    const cdnPath = createE2EtestPath(`/0.0.0/${sharedFile}`)
+    await expect(client.get(cdnPath))
+      .to.eventually.be.fulfilled.and.be.equal(index)
+  })
+
+  it('should revert to directory', async () => {
+    const cdnPath = createE2EtestPath('/notExistingFile.json/')
+    await expect(client.get(cdnPath))
+      .to.eventually.be.fulfilled.and.be.eql([])
+  })
+
+  it('should fail to put on a semver dir', async () => {
+    const resource = 'index.html'
+    const tmpCtx = await createTmpDir(createResources([resource]))
+    const cdnPath = createE2EtestPath('/0.0.0/')
+
+    await expect(
+      client.put(
+        cdnPath,
+        [
+          {
+            absolutePath: absoluteResolve(tmpCtx.name, resource),
+            loader(this) {
+              return fs.promises.readFile(this.absolutePath)
+            },
+            pathname: `./${resource}`,
+          },
+        ],
+        true
+      )
+    ).to.eventually.be.rejected.and.satisfies((error: unknown) => {
+      if (!(error instanceof MysteryBoxError)) {
+        return false
+      }
+
+      expect(error.message).to.equal('Folder ./__test/cdn-publish/0.0.0/ is not empty and scoped with semver versioning')
+
+      return true
+    })
+
+    await tmpCtx.cleanup()
+  })
+
+  it('should succed deleting', async () => {
+    const cdnPath = createE2EtestPath('/0.0.0/')
+
+    await expect(
+      client.delete(cdnPath, `./${sharedFile}`)
+    ).to.eventually.be.fulfilled
+  })
+
+  it('should succed to put with checksum', async () => {
+    const resource = 'index.html'
+    const tmpCtx = await createTmpDir(createResources([resource]))
+    const cdnPath = createE2EtestPath('/1.0.0/')
+
+    await expect(
+      client.put(
+        cdnPath,
+        [
+          {
+            absolutePath: absoluteResolve(tmpCtx.name, resource),
+            loader: async () => {
+              return {
+                buffer: Buffer.from(index, 'binary'),
+                checksum: indexChecksum,
+              }
+            },
+            pathname: `./${resource}`,
+          },
+        ],
+        true
+      )
+    ).to.eventually.be.fulfilled
+
+    await tmpCtx.cleanup()
+  })
+
+  it('should succed to put on an empty semver dir', async () => {
+    const resource = 'index.html'
+    const tmpCtx = await createTmpDir(createResources([resource]))
+    const cdnPath = createE2EtestPath('/2.0.0/')
+
+    await expect(
+      client.put(
+        cdnPath,
+        [
+          {
+            absolutePath: absoluteResolve(tmpCtx.name, resource),
+            loader(this) {
+              return fs.promises.readFile(this.absolutePath)
+            },
+            pathname: `./${resource}`,
+          },
+        ],
+        true
+      )
+    ).to.eventually.be.fulfilled
+
+    await tmpCtx.cleanup()
+  })
+
+  it('should fail deleting a not existing file', async () => {
+    const cdnPath = createE2EtestPath('/1.0.0/')
+
+    await expect(
+      client.delete(cdnPath, './notExistingFile.html')
+    ).to.eventually.be.rejected.and.satisfies((error: unknown) => {
+      if (!(error instanceof MysteryBoxError)) {
+        return false
+      }
+
+      if (!(error.cause instanceof Response)) {
+        return false
+      }
+
+      return true
+    })
+  })
+
+  it('should not fail deleting a not existing file with flag', async () => {
+    const cdnPath = createE2EtestPath('/1.0.0/')
+
+    await expect(
+      client.delete(cdnPath, './notExistingFile.html', true)
+    ).to.eventually.be.fulfilled
+  })
+
+  it('should attempt to cleanup the folder on failed upload semver folder', async () => {
+    const resources = ['file0.txt', 'file1.txt']
+    const tmpCtx = await createTmpDir(createResources(resources))
+    const cdnPath = createE2EtestPath('/3.0.0')
+
+    // Sometimes it happens that the cdn doesn't correctly clear the folder, it is a bunnyCdn bug
+    await client.delete(cdnPath, './file0.txt', true)
+    await client.delete(cdnPath, './file1.txt', true)
+
+    resources.push('NotExistingFile.js')
+    await expect(
+      client.put(
+        cdnPath,
+        resources.map((resource) => ({
+          absolutePath: absoluteResolve(tmpCtx.name, resource),
+          loader(this) {
+            return fs.promises.readFile(this.absolutePath)
+          },
+          pathname: `./${resource}`,
+        })) as [LoadingContext, ...LoadingContext[]],
+        true,
+        1
+      )
+    ).to.eventually.rejected.and.satisfies((error: unknown) => {
+      if (!(error instanceof MysteryBoxError)) {
+        return false
+      }
+
+      return error.message === './NotExistingFile.js'
+    })
+
+    await expect(client.list(cdnPath))
+      .to.eventually.be.fulfilled.and.to.have.length(0)
+
+    await tmpCtx.cleanup()
+  })
+})

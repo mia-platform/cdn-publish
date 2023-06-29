@@ -1,16 +1,23 @@
-import { mock } from 'node:test'
-
 import { expect, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { beforeEach, describe, it } from 'mocha'
+import { afterEach, beforeEach, describe, it } from 'mocha'
+import type { Context as MochaContext } from 'mocha'
+import type { SinonSandbox } from 'sinon'
+import { createSandbox } from 'sinon'
+import sinonChai from 'sinon-chai'
 
-import type { PullZoneMeta } from '../../src/clients/bunny-api.js'
-import { createCommand } from '../../src/command.js'
-import { accessKey, bunny } from '../server.js'
-import { buildCommandArguments, cliErrorMissingArgument, cliErrorRequiredOption, cliErrorUnknownOption, loggerStub } from '../utils.js'
+import type { PullZoneMeta } from '../../../src/clients/bunny-api.js'
+import { createCommand } from '../../../src/command.js'
+import { accessKey, bunny } from '../../server.js'
+import { buildCommandArguments, cliErrorMissingArgument, cliErrorRequiredOption, cliErrorUnknownOption, loggerStub } from '../../utils.js'
 
+interface Context extends MochaContext {
+    currentTest?: MochaContext['currentTest'] & {sandbox?: SinonSandbox}
+    test?: MochaContext['test'] & {sandbox?: SinonSandbox}
+  }
 
 use(chaiAsPromised)
+use(sinonChai)
 
 const pullzoneMock: PullZoneMeta[] = [
   { Id: 1, Name: 'bar' },
@@ -20,10 +27,6 @@ const pullzoneMock: PullZoneMeta[] = [
 describe('pullzone list', () => {
   const baseCommand = ['pullzone', 'list']
   const baseArgs = ['-k', accessKey]
-
-  beforeEach(() => {
-    mock.restoreAll()
-  })
 
   describe('should have those arguments', () => {
     it('-k, --access-key', async () => {
@@ -68,6 +71,16 @@ describe('pullzone purge', () => {
   const baseCommand = ['pullzone', 'purge']
   const baseArgs = ['-k', accessKey]
 
+  beforeEach(function (this: Context) {
+    if (this.currentTest) {
+      this.currentTest.sandbox = createSandbox()
+    }
+  })
+
+  afterEach(function (this: Context) {
+    this.currentTest?.sandbox?.restore()
+  })
+
   describe('should have those arguments', () => {
     it('-k, --access-key', async () => {
       await expect(createCommand(
@@ -107,13 +120,19 @@ describe('pullzone purge', () => {
   })
 
   describe('without arguments', () => {
-    it('should purge all pull zones', async () => {
+    it('should purge all pull zones', async function (this: Context) {
+      if (this.test?.sandbox === undefined) {
+        throw new TypeError('Cannot find sandbox')
+      }
+
       let postApiCall = 0
       let getApiCall = 0
-      mock.method(global, 'fetch', (url: URL, { method = 'GET' }: RequestInit = {}) => {
+      this.test.sandbox.stub(global, 'fetch').callsFake(async (url: URL | RequestInfo, config?: RequestInit) => {
+        const { method } = config ?? {}
+        const { pathname, search } = url as URL
         if (method === 'GET') {
-          expect(url.pathname).to.be.equal('/pullzone')
-          expect(url.search).to.be.equal('')
+          expect(pathname).to.be.equal('/pullzone')
+          expect(search).to.be.equal('')
           expect(method).to.be.equal('GET')
           getApiCall += 1
           return new Promise((res) =>
@@ -124,13 +143,14 @@ describe('pullzone purge', () => {
         if (method === 'POST') {
           postApiCall += 1
           const pullZoneId = postApiCall
-          expect(url.pathname).to.be.equal(`/pullzone/${pullZoneId}/purgeCache`)
-          expect(url.search).to.be.equal('')
+          expect(pathname).to.be.equal(`/pullzone/${pullZoneId}/purgeCache`)
+          expect(search).to.be.equal('')
           expect(method).to.be.equal('POST')
           return new Promise((res) =>
             res(new Response(undefined, { headers: bunny.headers204, status: 204 }))
           )
         }
+        return new Response(JSON.stringify({ error: 'Not Found' }), { status: 404 })
       })
 
       await expect(createCommand(
@@ -143,13 +163,19 @@ describe('pullzone purge', () => {
       expect(postApiCall).to.be.equal(2)
     })
 
-    it('should not crash if one zone fails', async () => {
+    it('should not crash if one zone fails', async function (this: Context) {
+      if (this.test?.sandbox === undefined) {
+        throw new TypeError('Cannot find sandbox')
+      }
+
       let postApiCall = 0
       let getApiCall = 0
-      mock.method(global, 'fetch', (url: URL, { method = 'GET' }: RequestInit = {}) => {
+      this.test.sandbox.stub(global, 'fetch').callsFake(async (url: URL | RequestInfo, config?: RequestInit) => {
+        const { method } = config ?? {}
+        const { pathname, search } = url as URL
         if (method === 'GET') {
-          expect(url.pathname).to.be.equal('/pullzone')
-          expect(url.search).to.be.equal('')
+          expect(pathname).to.be.equal('/pullzone')
+          expect(search).to.be.equal('')
           expect(method).to.be.equal('GET')
           getApiCall += 1
           return new Promise((res) =>
@@ -160,8 +186,8 @@ describe('pullzone purge', () => {
         if (method === 'POST') {
           postApiCall += 1
           const pullZoneId = postApiCall
-          expect(url.pathname).to.be.equal(`/pullzone/${pullZoneId}/purgeCache`)
-          expect(url.search).to.be.equal('')
+          expect(pathname).to.be.equal(`/pullzone/${pullZoneId}/purgeCache`)
+          expect(search).to.be.equal('')
           expect(method).to.be.equal('POST')
           const responseInit = pullZoneId === 1
             ? { headers: bunny.headers204, status: 204 }
@@ -170,6 +196,7 @@ describe('pullzone purge', () => {
             res(new Response(undefined, responseInit))
           )
         }
+        return new Response(JSON.stringify({ error: 'Not Found' }), { status: 404 })
       })
 
       await expect(createCommand(
@@ -184,19 +211,26 @@ describe('pullzone purge', () => {
   })
 
   describe('with --zone', () => {
-    it('should purge only the specifed zone', async () => {
+    it('should purge only the specifed zone', async function (this: Context) {
+      if (this.test?.sandbox === undefined) {
+        throw new TypeError('Cannot find sandbox')
+      }
+
       const pullZoneId = '123'
       let apiCall = 0
-      mock.method(global, 'fetch', (url: URL, { method = 'GET' }: RequestInit = {}) => {
+      this.test.sandbox.stub(global, 'fetch').callsFake(async (url: URL | RequestInfo, config?: RequestInit) => {
+        const { method } = config ?? {}
+        const { pathname, search } = url as URL
         if (method === 'POST') {
-          expect(url.pathname).to.be.equal(`/pullzone/${pullZoneId}/purgeCache`)
-          expect(url.search).to.be.equal('')
+          expect(pathname).to.be.equal(`/pullzone/${pullZoneId}/purgeCache`)
+          expect(search).to.be.equal('')
           expect(method).to.be.equal('POST')
           apiCall += 1
           return new Promise((res) =>
             res(new Response(undefined, { headers: bunny.headers204, status: 204 }))
           )
         }
+        return new Response(JSON.stringify({ error: 'Not Found' }), { status: 404 })
       })
 
       await expect(createCommand(

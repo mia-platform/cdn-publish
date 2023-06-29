@@ -1,14 +1,27 @@
-import { mock } from 'node:test'
-
-import { expect } from 'chai'
-import { beforeEach, describe, it } from 'mocha'
+import { expect, use } from 'chai'
+import chaiAsPromised from 'chai-as-promised'
+import { afterEach, beforeEach, describe, it } from 'mocha'
+import type { Context as MochaContext } from 'mocha'
+import type { SinonSandbox } from 'sinon'
+import { createSandbox } from 'sinon'
+import sinonChai from 'sinon-chai'
 
 import { createCdnContext } from '../src/cdn.js'
 import type { PullZoneMeta } from '../src/clients/bunny-api.js'
 import { creatBunnyApiClient } from '../src/clients/bunny-api.js'
 
+
 import { accessKey, bunny } from './server.js'
 import { loggerStub } from './utils.js'
+
+interface Context extends MochaContext {
+    currentTest?: MochaContext['currentTest'] & {sandbox?: SinonSandbox}
+    test?: MochaContext['test'] & {sandbox?: SinonSandbox}
+  }
+
+
+use(chaiAsPromised)
+use(sinonChai)
 
 const pullzoneMock: PullZoneMeta[] = [
   { Id: 1, Name: 'bar' },
@@ -16,20 +29,33 @@ const pullzoneMock: PullZoneMeta[] = [
 ]
 
 describe('bunny cdn client', () => {
-  beforeEach(() => {
-    mock.restoreAll()
+  beforeEach(function (this: Context) {
+    if (this.currentTest) {
+      this.currentTest.sandbox = createSandbox()
+    }
   })
 
-  it('should get a list of pullzones', async () => {
+  afterEach(function (this: Context) {
+    this.currentTest?.sandbox?.restore()
+  })
+
+
+  it('should get a list of pullzones', async function (this: Context) {
+    if (this.test?.sandbox === undefined) {
+      throw new TypeError('Cannot find sandbox')
+    }
     const cdn = createCdnContext(accessKey, {
       server: 'https://api.bunny.net/',
       storageZoneName: '',
     })
     const client = creatBunnyApiClient(cdn, loggerStub)
 
-    mock.method(global, 'fetch', (url: URL, { method = 'GET' }: RequestInit = {}) => {
-      expect(url.pathname).to.be.equal('/pullzone')
-      expect(url.search).to.be.equal('')
+    this.test.sandbox.stub(global, 'fetch').callsFake(async (url: URL | RequestInfo, config?: RequestInit) => {
+      const { method } = config ?? {}
+      const { pathname, search } = url as URL
+
+      expect(pathname).to.be.equal('/pullzone')
+      expect(search).to.be.equal('')
       expect(method).to.be.equal('GET')
       return new Promise((res) =>
         res(new Response(JSON.stringify(pullzoneMock), { headers: bunny.headers200, status: 200 }))
@@ -41,16 +67,22 @@ describe('bunny cdn client', () => {
       .and.deep.equal(pullzoneMock)
   })
 
-  it('should get a list of pullzones with search', async () => {
+  it('should get a list of pullzones with search', async function (this: Context) {
+    if (this.test?.sandbox === undefined) {
+      throw new TypeError('Cannot find sandbox')
+    }
     const cdn = createCdnContext(accessKey, {
       server: 'https://api.bunny.net/',
       storageZoneName: '',
     })
     const client = creatBunnyApiClient(cdn, loggerStub)
 
-    mock.method(global, 'fetch', (url: URL, { method = 'GET' }: RequestInit = {}) => {
-      expect(url.pathname).to.be.equal('/pullzone')
-      expect(url.search).to.be.equal('?search=bar')
+    this.test.sandbox.stub(global, 'fetch').callsFake(async (url: URL | RequestInfo, config?: RequestInit) => {
+      const { method } = config ?? {}
+      const { pathname, search,
+      } = url as URL
+      expect(pathname).to.be.equal('/pullzone')
+      expect(search).to.be.equal('?search=bar')
       expect(method).to.be.equal('GET')
       return new Promise((res) =>
         res(new Response(JSON.stringify(pullzoneMock.slice(0, 1)), { headers: bunny.headers200, status: 200 }))
@@ -62,7 +94,10 @@ describe('bunny cdn client', () => {
       .and.deep.equal(pullzoneMock.slice(0, 1))
   })
 
-  it('should purge a specific pullzone', async () => {
+  it('should purge a specific pullzone', async function (this: Context) {
+    if (this.test?.sandbox === undefined) {
+      throw new TypeError('Cannot find sandbox')
+    }
     const cdn = createCdnContext(accessKey, {
       server: 'https://api.bunny.net/',
       storageZoneName: '',
@@ -70,9 +105,12 @@ describe('bunny cdn client', () => {
     const client = creatBunnyApiClient(cdn, loggerStub)
     const pullZoneId = 123
 
-    mock.method(global, 'fetch', (url: URL, { method = 'GET' }: RequestInit = {}) => {
-      expect(url.pathname).to.be.equal(`/pullzone/${pullZoneId}/purgeCache`)
-      expect(url.search).to.be.equal('')
+    this.test.sandbox.stub(global, 'fetch').callsFake(async (url: URL | RequestInfo, config?: RequestInit) => {
+      const { method } = config ?? {}
+      const { pathname, search } = url as URL
+
+      expect(pathname).to.be.equal(`/pullzone/${pullZoneId}/purgeCache`)
+      expect(search).to.be.equal('')
       expect(method).to.be.equal('POST')
       return new Promise((res) =>
         res(new Response(undefined, { headers: bunny.headers204, status: 204 }))

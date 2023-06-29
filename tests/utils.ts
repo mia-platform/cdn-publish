@@ -1,14 +1,27 @@
 import crypto from 'crypto'
 import fs from 'fs/promises'
-import path, { dirname } from 'path'
+import { dirname, join } from 'path'
 
 import logger from 'node-color-log'
 import type { AffixOptions, Stats } from 'temp'
 import temp from 'temp'
 
+import type { CDN } from '../src/cdn'
+import { createBunnyEdgeStorageClient } from '../src/clients/bunny-edge-storage'
+import type { AbsPath, RelPath } from '../src/types'
+
+import { CDN_TEST_FOLDER, PACKAGE_JSON_FILENAME, PACKAGE_TEST_NAMESPACE } from './consts'
+
 interface Temp {
  cleanup: () => Promise<void | Stats>
  name: `/${string}`
+}
+
+interface PackageCtx {
+  files: string[]
+  packageName: string
+  resources: string[]
+  version: string
 }
 
 temp.track()
@@ -16,7 +29,7 @@ temp.track()
 const createTmpDir = async (resources: Record<string, string | Buffer>, opts?: string | AffixOptions): Promise<Temp> => {
   const dirPath = await temp.mkdir(opts)
   await Promise.all(Object.entries(resources).map(async ([filepath, buffer]) => {
-    const inputPath = path.join(dirPath, filepath)
+    const inputPath = join(dirPath, filepath)
     await fs.mkdir(dirname(inputPath), { recursive: true })
     await fs.writeFile(inputPath, buffer)
   }))
@@ -66,6 +79,55 @@ const cliErrorRequiredOption = (cmd: string) => `error: required option '${cmd}'
 
 const cliErrorMissingArgument = (cmd: string) => `error: option '${cmd}' argument missing`
 
+const createE2EtestPath = (path?: AbsPath): RelPath => `./${CDN_TEST_FOLDER}${path ?? ''}`
+
+const clearE2EtestDirectory = async (cdnCtx: CDN) => {
+  const client = createBunnyEdgeStorageClient(cdnCtx, loggerStub)
+  const path: RelPath = `./${CDN_TEST_FOLDER}/`
+  return client.delete(path, undefined, true)
+}
+
+const createIntegrationCtx = async ({
+  files = ['index.html', 'package.json'],
+  packageName = `e2e-test`,
+  resources = ['index.html'],
+  version = '0.0.1',
+} = {}) => {
+  // eslint-disable-next-line no-param-reassign
+  packageName = `${PACKAGE_TEST_NAMESPACE}/${packageName}`
+  if (!packageName.startsWith(PACKAGE_TEST_NAMESPACE)) {
+    throw new Error(`During tests only packages must be in ${PACKAGE_TEST_NAMESPACE}!`)
+  }
+  const packageJsonFile = JSON.stringify(
+    createPackageJson(
+      packageName,
+      version,
+      files
+    )
+  )
+
+  const createdFiles = {
+    ...createResources(resources),
+    [PACKAGE_JSON_FILENAME]: packageJsonFile,
+  }
+  const repositoryCtx: Temp = await createTmpDir(createdFiles)
+
+  const createCdnPath = (): RelPath => `./${packageName.slice(1)}/${version}`
+
+  const packageCtx: PackageCtx = {
+    files,
+    packageName,
+    resources,
+    version,
+  }
+
+  return {
+    createCdnPath,
+    packageCtx,
+    repositoryCtx,
+  }
+}
+
 export type { Temp }
 export {
   createTmpDir,
@@ -79,4 +141,7 @@ export {
   cliErrorUnknownOption,
   cliErrorRequiredOption,
   cliErrorMissingArgument,
+  clearE2EtestDirectory,
+  createE2EtestPath,
+  createIntegrationCtx,
 }

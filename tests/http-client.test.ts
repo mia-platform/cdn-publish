@@ -1,11 +1,15 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable @typescript-eslint/require-await */
 import fs from 'fs'
-import { mock } from 'node:test'
 
 import { expect, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { beforeEach, describe, it } from 'mocha'
+import { afterEach, beforeEach, describe, it } from 'mocha'
+import type { Context as MochaContext } from 'mocha'
+import type { SinonSandbox } from 'sinon'
+import { createSandbox } from 'sinon'
+import sinonChai from 'sinon-chai'
+
 
 import { createCdnContext } from '../src/cdn.js'
 import { createBunnyEdgeStorageClient } from '../src/clients/bunny-edge-storage.js'
@@ -14,10 +18,16 @@ import MysteryBoxError from '../src/error.js'
 import { absoluteResolve } from '../src/glob.js'
 import type { FileContext, LoadingContext } from '../src/types.js'
 
-import { accessKey, serverBaseUrl, storageZoneName } from './server.js'
+import { accessKey, serverStorageBaseUrl, storageZoneName } from './server.js'
 import { createResources, createTmpDir, loggerStub, noop, sha256 } from './utils.js'
 
+interface Context extends MochaContext {
+  currentTest?: MochaContext['currentTest'] & {sandbox?: SinonSandbox}
+  test?: MochaContext['test'] & {sandbox?: SinonSandbox}
+}
+
 use(chaiAsPromised)
+use(sinonChai)
 
 // 400
 const bunny400 = ''
@@ -71,18 +81,29 @@ const bunny401Headers = {
 }
 
 describe('http client tests', () => {
-  beforeEach(() => {
-    mock.restoreAll()
+  beforeEach(function (this: Context) {
+    if (this.currentTest) {
+      this.currentTest.sandbox = createSandbox()
+    }
   })
 
-  it('should handle a 400 bad request', async () => {
+  afterEach(function (this: Context) {
+    this.currentTest?.sandbox?.restore()
+  })
+
+
+  it('should handle a 400 bad request', async function (this: Context) {
+    if (this.test?.sandbox === undefined) {
+      throw new TypeError('Cannot find sandbox')
+    }
+
     const cdn = createCdnContext(accessKey, {
-      server: serverBaseUrl,
+      server: serverStorageBaseUrl,
       storageZoneName,
     })
     const path = './..%2F../' as const
 
-    mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
+    this.test.sandbox.stub(global, 'fetch').callsFake(async (url: URL | RequestInfo, config?: RequestInit) => {
       const stringifiedUrl = url instanceof URL ? url.href : (url instanceof Request ? url.url : url)
       if (
         stringifiedUrl.endsWith('..%2F../')
@@ -100,14 +121,18 @@ describe('http client tests', () => {
       .to.eventually.be.rejectedWith(MysteryBoxError)
   })
 
-  it('should retrieve data on a 200', async () => {
+  it('should retrieve data on a 200', async function (this: Context) {
+    if (this.test?.sandbox === undefined) {
+      throw new TypeError('Cannot find sandbox')
+    }
+
     const cdn = createCdnContext(accessKey, {
-      server: serverBaseUrl,
+      server: serverStorageBaseUrl,
       storageZoneName,
     })
     const path = './__test/' as const
 
-    mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
+    this.test.sandbox.stub(global, 'fetch').callsFake(async (url: URL | RequestInfo, config?: RequestInit) => {
       const stringifiedUrl = url instanceof URL ? url.href : (url instanceof Request ? url.url : url)
       if (
         stringifiedUrl.endsWith('__test/')
@@ -125,18 +150,22 @@ describe('http client tests', () => {
       .to.eventually.be.fulfilled.and.have.members([])
   })
 
-  it('should fail on loading a non buffer data', async () => {
+  it('should fail on loading a non buffer data', async function (this: Context) {
+    if (this.test?.sandbox === undefined) {
+      throw new TypeError('Cannot find sandbox')
+    }
+
     const resource = 'package.json'
     const tmpCtx = await createTmpDir(createResources([resource]))
 
     const cdn = createCdnContext(accessKey, {
-      server: serverBaseUrl,
+      server: serverStorageBaseUrl,
       storageZoneName,
     })
     const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
     // Avoid to call a real server
-    mock.method(global, 'fetch', async () => ({}))
+    this.test.sandbox.stub(global, 'fetch').callsFake(async () => new Response())
 
     await expect(client.put('./__test', [
       {
@@ -154,17 +183,21 @@ describe('http client tests', () => {
     await tmpCtx.cleanup()
   })
 
-  it('should put some files', async () => {
+  it('should put some files', async function (this: Context) {
+    if (this.test?.sandbox === undefined) {
+      throw new TypeError('Cannot find sandbox')
+    }
+
     const resource = 'package.json'
     const tmpCtx = await createTmpDir(createResources([resource]))
 
     const cdn = createCdnContext(accessKey, {
-      server: serverBaseUrl,
+      server: serverStorageBaseUrl,
       storageZoneName,
     })
     const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
-    mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
+    this.test.sandbox.stub(global, 'fetch').callsFake(async (url: URL | RequestInfo, config?: RequestInit) => {
       const stringifiedUrl = url instanceof URL ? url.href : (url instanceof Request ? url.url : url)
       if (
         stringifiedUrl.endsWith('__test/package.json')
@@ -190,17 +223,21 @@ describe('http client tests', () => {
     await tmpCtx.cleanup()
   })
 
-  it('should put multiple batches of files', async () => {
+  it('should put multiple batches of files', async function (this: Context) {
+    if (this.test?.sandbox === undefined) {
+      throw new TypeError('Cannot find sandbox')
+    }
+
     const resources = Array(26).fill(0).map((_, idx) => `file${idx}.js`)
     const tmpCtx = await createTmpDir(createResources(resources))
 
     const cdn = createCdnContext(accessKey, {
-      server: serverBaseUrl,
+      server: serverStorageBaseUrl,
       storageZoneName,
     })
     const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
-    mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
+    this.test.sandbox.stub(global, 'fetch').callsFake(async (url: URL | RequestInfo, config?: RequestInit) => {
       const stringifiedUrl = url instanceof URL ? url.href : (url instanceof Request ? url.url : url)
       if (
         stringifiedUrl.match(/__test\/file\d{1,2}\.js/)
@@ -226,17 +263,21 @@ describe('http client tests', () => {
     await tmpCtx.cleanup()
   })
 
-  it('should put multiple files but fail on one', async () => {
+  it('should put multiple files but fail on one', async function (this: Context) {
+    if (this.test?.sandbox === undefined) {
+      throw new TypeError('Cannot find sandbox')
+    }
+
     const resources = Array(3).fill(0).map((_, idx) => `file${idx}.js`)
     const tmpCtx = await createTmpDir(createResources(resources))
 
     const cdn = createCdnContext(accessKey, {
-      server: serverBaseUrl,
+      server: serverStorageBaseUrl,
       storageZoneName,
     })
     const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
-    mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
+    this.test.sandbox.stub(global, 'fetch').callsFake(async (url: URL | RequestInfo, config?: RequestInit) => {
       const stringifiedUrl = url instanceof URL ? url.href : (url instanceof Request ? url.url : url)
       if (
         stringifiedUrl.match(/__test\/file\d{1,2}\.js/)
@@ -267,17 +308,21 @@ describe('http client tests', () => {
     await tmpCtx.cleanup()
   })
 
-  it('unauthorized scenario', async () => {
+  it('unauthorized scenario', async function (this: Context) {
+    if (this.test?.sandbox === undefined) {
+      throw new TypeError('Cannot find sandbox')
+    }
+
     const resource = 'package.json'
     const tmpCtx = await createTmpDir(createResources([resource]))
 
     const cdn = createCdnContext(accessKey, {
-      server: serverBaseUrl,
+      server: serverStorageBaseUrl,
       storageZoneName,
     })
     const client = createBunnyEdgeStorageClient(cdn, loggerStub)
 
-    mock.method(global, 'fetch', async (url: URL | RequestInfo, config?: RequestInit) => {
+    this.test.sandbox.stub(global, 'fetch').callsFake(async (url: URL | RequestInfo, config?: RequestInit) => {
       const stringifiedUrl = url instanceof URL ? url.href : (url instanceof Request ? url.url : url)
       if (
         stringifiedUrl.match('__test/package.json')
@@ -335,7 +380,7 @@ describe.skip('e2e DONT USE', () => {
       throw new TypeError('must set an STORAGE_ACCESS_KEY')
     }
     const cdn = createCdnContext(e2eAccessKey, {
-      server: serverBaseUrl,
+      server: serverStorageBaseUrl,
       storageZoneName,
     })
     const client = createBunnyEdgeStorageClient(cdn, loggerStub)
@@ -367,7 +412,7 @@ describe.skip('e2e DONT USE', () => {
     }
 
     const cdn = createCdnContext(e2eAccessKey, {
-      server: serverBaseUrl,
+      server: serverStorageBaseUrl,
       storageZoneName,
     })
     const client = createHttpClient({

@@ -58,7 +58,46 @@ cdn [options] [command]
 
 ### GitHub Action
 
-In a GitHub workflow, the _CDN publish_ CLI can be called by running its container as per the following snippet
+In a GitHub workflow, the _CDN publish_ CLI can be called by running its container as per the following snippet:
+
+```yaml
+cdn-release:
+  needs:
+    []
+    # 👆 your dependencies
+  name: Release on CDN
+  runs-on: ubuntu-latest
+
+  build:
+    steps:
+    - name: Build
+      run: yarn build --dir dist
+      # 👆 your build commands, depends on the project
+
+      - name: Archive Production Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: built-project
+          path: dist/
+
+  cdn-release:
+    needs: build
+    name: Test CDN
+    runs-on: ubuntu-latest
+
+    steps:
+     - name: Download Artifacts
+       uses: actions/download-artifact@v2
+       with:
+         name: built-project
+         path: ./dist
+
+     - name: Publish to Mia CDN
+       run: |
+        docker run --rm -v $PWD/dist:/dist miaplatform/cdn-publish:0.4.0 cdn -k "$STORAGE_ACCESS_KEY" -s "$STORAGE-ZONE" --project ./dist
+```
+
+Or, if you are running a job with npm installed, you can simply install the cli:
 
 ```yaml
 cdn-release:
@@ -101,7 +140,7 @@ cdn-release:
     []
     # 👆 your cache
   script:
-    - cdn publish -k "$STORAGE_ACCESS_KEY" -s "$STORAGE-ZONE"
+    - cdn publish -k "$STORAGE_ACCESS_KEY" -s "$STORAGE-ZONE" --project ./dist
 ```
 
 ### From source code

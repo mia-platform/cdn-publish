@@ -1,3 +1,5 @@
+import { setTimeout } from 'timers/promises'
+
 import { expect, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { after, before, describe, it } from 'mocha'
@@ -205,6 +207,9 @@ describe('E2E: publish project', () => {
         global,
         loggerStub
       )).to.be.eventually.fulfilled
+
+      // bunnyCdn bug needs time to remove the file, added the sleep to make test robust
+      await setTimeout(500)
 
       await expect(client.list(cdnRepositoryPath))
         .to.be.eventually.fulfilled.and.to.have.length(3)

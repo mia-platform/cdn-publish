@@ -1,6 +1,6 @@
 import { expect, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { before, describe, it } from 'mocha'
+import { after, before, describe, it } from 'mocha'
 
 import { createCdnContext } from '../../../src/cdn.js'
 import { createBunnyEdgeStorageClient } from '../../../src/clients/bunny-edge-storage.js'
@@ -9,7 +9,7 @@ import { absoluteResolve } from '../../../src/glob.js'
 import type { RelPath } from '../../../src/types.js'
 import { PACKAGE_JSON_FILENAME } from '../../consts.js'
 import { storageAccessKey, storageZoneName, serverStorageBaseUrl } from '../../server.js'
-import { buildCommandArguments, clearE2EtestDirectory, cliErrorMissingArgument, cliErrorRequiredOption, cliErrorUnknownOption, createIntegrationCtx, loggerStub } from '../../utils.js'
+import { buildCommandArguments, cliErrorMissingArgument, cliErrorRequiredOption, cliErrorUnknownOption, createE2EtestContext, loggerStub } from '../../utils.js'
 
 use(chaiAsPromised)
 
@@ -21,8 +21,13 @@ describe('E2E: publish project', () => {
   const client = createBunnyEdgeStorageClient(cdnCtx, loggerStub)
   const baseCommand = ['publish']
   const baseArgs = ['-k', storageAccessKey, '-s', storageZoneName]
+  const { clearE2EtestDirectory, createPackageCtx } = createE2EtestContext()
 
   before(async () => {
+    await clearE2EtestDirectory(cdnCtx)
+  })
+
+  after(async () => {
     await clearE2EtestDirectory(cdnCtx)
   })
 
@@ -100,7 +105,7 @@ describe('E2E: publish project', () => {
 
   describe('without arguments', () => {
     it('should push empty senver package', async () => {
-      const { repositoryCtx, createCdnPath } = await createIntegrationCtx()
+      const { repositoryCtx, createCdnPath } = await createPackageCtx()
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
       await expect(createCommand(
         buildCommandArguments([...baseCommand, ...baseArgs, '--project', projectPath]),
@@ -116,7 +121,7 @@ describe('E2E: publish project', () => {
     })
 
     it('should throw error if no files found package', async () => {
-      const { repositoryCtx } = await createIntegrationCtx({ files: ['notExistingFile.js'] })
+      const { repositoryCtx } = await createPackageCtx({ files: ['notExistingFile.js'] })
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
 
       await expect(createCommand(
@@ -129,7 +134,7 @@ describe('E2E: publish project', () => {
     })
 
     it('should throw error if pushed server package it is already present', async () => {
-      const { repositoryCtx, createCdnPath } = await createIntegrationCtx({ version: '2.0.0' })
+      const { repositoryCtx, createCdnPath } = await createPackageCtx({ version: '2.0.0' })
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
       const cdnRepositoryPath = createCdnPath()
 
@@ -154,7 +159,7 @@ describe('E2E: publish project', () => {
 
   describe('with --override-version', () => {
     it('should push empty senver package', async () => {
-      const { repositoryCtx, createCdnPath } = await createIntegrationCtx()
+      const { repositoryCtx, createCdnPath } = await createPackageCtx()
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
 
       await expect(createCommand(
@@ -172,13 +177,9 @@ describe('E2E: publish project', () => {
 
     it('should override a senver package', async () => {
       const version = '3.0.0'
-      const { repositoryCtx, createCdnPath } = await createIntegrationCtx({ version })
+      const { repositoryCtx, createCdnPath } = await createPackageCtx({ version })
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
       const cdnRepositoryPath = createCdnPath()
-
-      // Sometimes it happens that the cdn doesn't correctly clear the folder, it is a bunnyCdn bug
-      await client.delete(cdnRepositoryPath, './index.html', true)
-      await client.delete(cdnRepositoryPath, './package.json', true)
 
       await expect(createCommand(
         buildCommandArguments([...baseCommand, ...baseArgs, '--project', projectPath, '--override-version']),
@@ -187,12 +188,12 @@ describe('E2E: publish project', () => {
       )).to.be.eventually.fulfilled
 
       await expect(client.list(cdnRepositoryPath))
-        .to.eventually.be.fulfilled.and.to.have.length(2)
+        .to.be.eventually.fulfilled.and.to.have.length(2)
 
       await repositoryCtx.cleanup()
 
       const newFiles = ['a.js', 'b.js', 'c.js']
-      const { repositoryCtx: repositoryCtxUpdate } = await createIntegrationCtx({
+      const { repositoryCtx: repositoryCtxUpdate } = await createPackageCtx({
         files: newFiles,
         resources: newFiles,
         version,
@@ -206,13 +207,13 @@ describe('E2E: publish project', () => {
       )).to.be.eventually.fulfilled
 
       await expect(client.list(cdnRepositoryPath))
-        .to.eventually.be.fulfilled.and.to.have.length(3)
+        .to.be.eventually.fulfilled.and.to.have.length(3)
 
       await repositoryCtxUpdate.cleanup()
     })
 
     it('should push a custom senver tag', async () => {
-      const { packageCtx, repositoryCtx, createCdnPath } = await createIntegrationCtx({ version: '4.0.0' })
+      const { packageCtx, repositoryCtx, createCdnPath } = await createPackageCtx({ version: '4.0.0' })
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
       const customVersion = 'latest'
 
@@ -227,7 +228,7 @@ describe('E2E: publish project', () => {
       await expect(client.list(cdnRepositoryPath))
         .to.eventually.be.fulfilled.and.to.have.length(0)
 
-      const cdnRepositoryPathCustomVer = cdnRepositoryPath.replace(packageCtx.version, customVersion) as RelPath
+      const cdnRepositoryPathCustomVer = cdnRepositoryPath.replace(packageCtx.version ?? '', customVersion) as RelPath
       await expect(client.list(cdnRepositoryPathCustomVer))
         .to.eventually.be.fulfilled.and.to.have.length(2)
 

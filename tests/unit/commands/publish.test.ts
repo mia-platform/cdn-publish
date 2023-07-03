@@ -10,7 +10,7 @@ import { absoluteResolve } from '../../../src/glob.js'
 import type { RelPath } from '../../../src/types.js'
 import { PACKAGE_JSON_FILENAME } from '../../consts.js'
 import { storageAccessKey, storageZoneName, serverStorageBaseUrl, createServer } from '../../server.js'
-import { buildCommandArguments, cliErrorMissingArgument, cliErrorRequiredOption, cliErrorUnknownOption, createIntegrationCtx, loggerStub } from '../../utils.js'
+import { buildCommandArguments, cliErrorMissingArgument, cliErrorRequiredOption, cliErrorUnknownOption, createE2EtestContext, loggerStub } from '../../utils.js'
 
 interface Context extends MochaContext {
   cleanup?: () => void | PromiseLike<void> | Promise<void>
@@ -26,6 +26,7 @@ describe('publish project', () => {
   const client = createBunnyEdgeStorageClient(cdnCtx, loggerStub)
   const baseCommand = ['publish']
   const baseArgs = ['-k', storageAccessKey, '-s', storageZoneName]
+  const { createPackageCtx } = createE2EtestContext()
 
   beforeEach(async function (this: Context) {
     this.cleanup = await createServer()
@@ -109,7 +110,7 @@ describe('publish project', () => {
 
   describe('without arguments', () => {
     it('should push empty senver package', async () => {
-      const { repositoryCtx, createCdnPath } = await createIntegrationCtx()
+      const { repositoryCtx, createCdnPath } = await createPackageCtx()
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
 
       await expect(createCommand(
@@ -126,7 +127,7 @@ describe('publish project', () => {
     })
 
     it('should throw error if no files found package', async () => {
-      const { repositoryCtx } = await createIntegrationCtx({ files: ['notExistingFile.js'] })
+      const { repositoryCtx } = await createPackageCtx({ files: ['notExistingFile.js'] })
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
 
       await expect(createCommand(
@@ -139,7 +140,7 @@ describe('publish project', () => {
     })
 
     it('should throw error if pushed server package it is already present', async () => {
-      const { repositoryCtx, createCdnPath } = await createIntegrationCtx({ version: '2.0.0' })
+      const { repositoryCtx, createCdnPath } = await createPackageCtx({ version: '2.0.0' })
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
       const cdnRepositoryPath = createCdnPath()
 
@@ -164,7 +165,7 @@ describe('publish project', () => {
 
   describe('with --override-version', () => {
     it('should push empty senver package', async () => {
-      const { repositoryCtx, createCdnPath } = await createIntegrationCtx()
+      const { repositoryCtx, createCdnPath } = await createPackageCtx()
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
 
       await expect(createCommand(
@@ -182,7 +183,7 @@ describe('publish project', () => {
 
     it('should override a senver package', async () => {
       const version = '3.0.0'
-      const { repositoryCtx, createCdnPath } = await createIntegrationCtx({ version })
+      const { repositoryCtx, createCdnPath } = await createPackageCtx({ version })
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
 
       await expect(createCommand(
@@ -199,7 +200,7 @@ describe('publish project', () => {
 
 
       const newFiles = ['a.js', 'b.js', 'c.js']
-      const { repositoryCtx: repositoryCtxUpdate } = await createIntegrationCtx({
+      const { repositoryCtx: repositoryCtxUpdate } = await createPackageCtx({
         files: newFiles,
         resources: newFiles,
         version,
@@ -219,7 +220,7 @@ describe('publish project', () => {
     })
 
     it('should push a custom senver tag', async () => {
-      const { packageCtx, repositoryCtx, createCdnPath } = await createIntegrationCtx({ version: '4.0.0' })
+      const { packageCtx, repositoryCtx, createCdnPath } = await createPackageCtx({ version: '4.0.0' })
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
       const customVersion = 'latest'
 
@@ -234,7 +235,7 @@ describe('publish project', () => {
       await expect(client.list(cdnRepositoryPath))
         .to.eventually.be.fulfilled.and.to.have.length(0)
 
-      const cdnRepositoryPathCustomVer = cdnRepositoryPath.replace(packageCtx.version, customVersion) as RelPath
+      const cdnRepositoryPathCustomVer = cdnRepositoryPath.replace(packageCtx.version ?? '', customVersion) as RelPath
       await expect(client.list(cdnRepositoryPathCustomVer))
         .to.eventually.be.fulfilled.and.to.have.length(2)
 

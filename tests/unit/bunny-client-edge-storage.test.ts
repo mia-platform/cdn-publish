@@ -14,7 +14,7 @@ import { absoluteResolve } from '../../src/glob.js'
 import type { LoadingContext } from '../../src/types.js'
 
 import { storageAccessKey, serverStorageBaseUrl, storageZoneName, indexChecksum, index, createServer } from './../server.js'
-import { createE2EtestPath, createResources, createTmpDir, loggerStub, sha256 } from './../utils.js'
+import { createE2EtestContext, createResources, createTmpDir, loggerStub, sha256 } from './../utils.js'
 
 interface Context extends MochaContext {
   cleanup?: () => void | PromiseLike<void> | Promise<void>
@@ -29,6 +29,7 @@ describe('bunny edge storage cdn client', () => {
   })
   const client = createBunnyEdgeStorageClient(cdnCtx, loggerStub)
   const sharedFile = 'index.txt'
+  const { uuid, createE2EtestPath } = createE2EtestContext()
 
   beforeEach(async function (this: Context) {
     this.cleanup = await createServer()
@@ -127,7 +128,7 @@ describe('bunny edge storage cdn client', () => {
         return false
       }
 
-      expect(error.message).to.equal('Folder ./__test/cdn-publish/0.0.0/ is not empty and scoped with semver versioning')
+      expect(error.message).to.equal(`Folder ./__test/cdn-publish/${uuid}/0.0.0/ is not empty and scoped with semver versioning`)
 
       return true
     })

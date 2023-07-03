@@ -1,10 +1,11 @@
 
 /* eslint-disable @typescript-eslint/require-await */
 import fs from 'fs'
+import { setTimeout } from 'timers/promises'
 
 import { expect, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { before, describe, it } from 'mocha'
+import { after, before, describe, it } from 'mocha'
 
 import { createCdnContext } from '../../src/cdn.js'
 import { createBunnyEdgeStorageClient } from '../../src/clients/bunny-edge-storage.js'
@@ -13,7 +14,7 @@ import { absoluteResolve } from '../../src/glob.js'
 import type { LoadingContext } from '../../src/types.js'
 
 import { storageAccessKey, serverStorageBaseUrl, storageZoneName, indexChecksum, index } from './../server.js'
-import { clearE2EtestDirectory, createE2EtestPath, createResources, createTmpDir, loggerStub, sha256 } from './../utils.js'
+import { createE2EtestContext, createResources, createTmpDir, loggerStub, sha256 } from './../utils.js'
 
 use(chaiAsPromised)
 
@@ -24,6 +25,7 @@ describe('E2E: bunny edge storage cdn client', () => {
   })
   const client = createBunnyEdgeStorageClient(cdnCtx, loggerStub)
   const sharedFile = 'index.txt'
+  const { uuid, createE2EtestPath, clearE2EtestDirectory } = createE2EtestContext()
 
   before(async () => {
     await clearE2EtestDirectory(cdnCtx)
@@ -54,6 +56,10 @@ describe('E2E: bunny edge storage cdn client', () => {
       ],
       false
     )
+  })
+
+  after(async () => {
+    await clearE2EtestDirectory(cdnCtx)
   })
 
   it('should get a list of files', async () => {
@@ -118,7 +124,7 @@ describe('E2E: bunny edge storage cdn client', () => {
         return false
       }
 
-      expect(error.message).to.equal('Folder ./__test/cdn-publish/0.0.0/ is not empty and scoped with semver versioning')
+      expect(error.message).to.equal(`Folder ./__test/cdn-publish/${uuid}/0.0.0/ is not empty and scoped with semver versioning`)
 
       return true
     })
@@ -220,10 +226,6 @@ describe('E2E: bunny edge storage cdn client', () => {
     const tmpCtx = await createTmpDir(createResources(resources))
     const cdnPath = createE2EtestPath('/3.0.0')
 
-    // Sometimes it happens that the cdn doesn't correctly clear the folder, it is a bunnyCdn bug
-    await client.delete(cdnPath, './file0.txt', true)
-    await client.delete(cdnPath, './file1.txt', true)
-
     resources.push('NotExistingFile.js')
     await expect(
       client.put(
@@ -246,6 +248,8 @@ describe('E2E: bunny edge storage cdn client', () => {
       return error.message === './NotExistingFile.js'
     })
 
+    // bunnyCdn bug needs time to remove the file, added the sleep to make test robust
+    await setTimeout(500)
     await expect(client.list(cdnPath))
       .to.eventually.be.fulfilled.and.to.have.length(0)
 

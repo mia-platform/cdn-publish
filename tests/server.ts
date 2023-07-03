@@ -3,7 +3,7 @@ import path from 'path'
 
 import { stub } from 'sinon'
 
-import { createIntegrationCtx } from './utils.js'
+import { createTmpDir } from './utils.js'
 
 // ----------- 0.0.0/
 const index = '<!DOCTYPE html><html></html>'
@@ -136,16 +136,7 @@ const stringifyUrl = (url: URL | RequestInfo) => (
 )
 
 const createServer = async () => {
-  /**
-   *  __test/
-   *    file0.txt
-   *    file1.txt
-   *    0.0.0/
-   *      index.html
-   *    1.0.0/
-   *      <empty>
-   */
-  const tmpCtx = await createIntegrationCtx()
+  const tmpCtx = await createTmpDir({})
 
   const serverStub = stub(global, 'fetch').callsFake(async (url: URL | RequestInfo, config?: RequestInit) => {
     const { method, headers } = config ?? {}
@@ -155,23 +146,23 @@ const createServer = async () => {
     const href = stringifiedUrl.match(/(?<href>\/__test\/.*)$/)?.groups?.href ?? undefined
     const res404 = new Promise<Response>((res) => res(new Response(JSON.stringify(response404), { headers: headers404, status: 404 })))
     const res401 = new Promise<Response>((res) => res(new Response(JSON.stringify(response401), { headers: headers401, status: 401 })))
-    const getFile = async (filepath: string) => fs.readFile(path.join(tmpCtx.repositoryCtx.name, filepath), { encoding: 'utf-8' })
-    const createDir = async (filepath: string) => fs.mkdir(path.join(tmpCtx.repositoryCtx.name, path.dirname(filepath)), { recursive: true })
-    const writeFile = async (filepath: string, file: string) => fs.writeFile(path.join(tmpCtx.repositoryCtx.name, filepath), file)
-    const isDir = async (filepath: string) => (await fs.lstat(path.join(tmpCtx.repositoryCtx.name, filepath))).isDirectory()
+    const getFile = async (filepath: string) => fs.readFile(path.join(tmpCtx.name, filepath), { encoding: 'utf-8' })
+    const createDir = async (filepath: string) => fs.mkdir(path.join(tmpCtx.name, path.dirname(filepath)), { recursive: true })
+    const writeFile = async (filepath: string, file: string) => fs.writeFile(path.join(tmpCtx.name, filepath), file)
+    const isDir = async (filepath: string) => (await fs.lstat(path.join(tmpCtx.name, filepath))).isDirectory()
     const filepathExists = async (filepath: string) => {
       try {
-        await fs.stat(path.join(tmpCtx.repositoryCtx.name, filepath))
+        await fs.stat(path.join(tmpCtx.name, filepath))
         return true
       } catch {
         return false
       }
     }
 
-    const deleteFilepath = async (filepath: string) => fs.rm(path.join(tmpCtx.repositoryCtx.name, filepath), { recursive: true })
+    const deleteFilepath = async (filepath: string) => fs.rm(path.join(tmpCtx.name, filepath), { recursive: true })
     const readDir = async (filepath: string) => {
       try {
-        const basePath = path.join(tmpCtx.repositoryCtx.name, filepath)
+        const basePath = path.join(tmpCtx.name, filepath)
         return (await fs.readdir(basePath))
           .map(file => ({ ...baseFile,
             IsDirectory: isDir(path.join(filepath, file)),
@@ -238,7 +229,7 @@ const createServer = async () => {
 
   return async () => {
     serverStub.restore()
-    await tmpCtx.repositoryCtx.cleanup()
+    await tmpCtx.cleanup()
   }
 }
 

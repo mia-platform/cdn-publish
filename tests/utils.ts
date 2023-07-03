@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import fs from 'fs/promises'
 import { dirname, join } from 'path'
 
+import type IPackageJson from '@ts-type/package-dts'
 import logger from 'node-color-log'
 import type { AffixOptions, Stats } from 'temp'
 import temp from 'temp'
@@ -17,11 +18,10 @@ interface Temp {
  name: `/${string}`
 }
 
-interface PackageCtx {
-  files: string[]
-  packageName: string
-  resources: string[]
-  version: string
+export interface IntegrationCtx {
+  createCdnPath: () => RelPath
+  packageCtx: IPackageJson
+  repositoryCtx: Temp
 }
 
 temp.track()
@@ -79,54 +79,64 @@ const cliErrorRequiredOption = (cmd: string) => `error: required option '${cmd}'
 
 const cliErrorMissingArgument = (cmd: string) => `error: option '${cmd}' argument missing`
 
-const createE2EtestPath = (path?: AbsPath): RelPath => `./${CDN_TEST_FOLDER}${path ?? ''}`
+const createE2EtestContext = () => {
+  const testUUID = crypto.randomUUID()
+  const rootTestPath: RelPath = `./${CDN_TEST_FOLDER}/${testUUID}`
 
-const clearE2EtestDirectory = async (cdnCtx: CDN) => {
-  const client = createBunnyEdgeStorageClient(cdnCtx, loggerStub)
-  const path: RelPath = `./${CDN_TEST_FOLDER}/`
-  return client.delete(path, undefined, true)
-}
-
-const createIntegrationCtx = async ({
-  files = ['index.html', 'package.json'],
-  packageName = `e2e-test`,
-  resources = ['index.html'],
-  version = '0.0.1',
-} = {}) => {
-  // eslint-disable-next-line no-param-reassign
-  packageName = `${PACKAGE_TEST_NAMESPACE}/${packageName}`
-  if (!packageName.startsWith(PACKAGE_TEST_NAMESPACE)) {
-    throw new Error(`During tests only packages must be in ${PACKAGE_TEST_NAMESPACE}!`)
+  const createE2EtestPath = (path?: AbsPath): RelPath => `${rootTestPath}${path ?? ''}`
+  const clearE2EtestDirectory = async (cdnCtx: CDN) => {
+    const client = createBunnyEdgeStorageClient(cdnCtx, loggerStub)
+    return client.delete(rootTestPath, undefined, true)
   }
-  const packageJsonFile = JSON.stringify(
-    createPackageJson(
-      packageName,
-      version,
-      files
+
+  const createPackageCtx = async ({
+    files = ['index.html', 'package.json'],
+    packageName = `e2e-test`,
+    resources = ['index.html'],
+    version = '0.0.1',
+  } = {}): Promise<IntegrationCtx> => {
+    const safePackageName = `${PACKAGE_TEST_NAMESPACE}/${testUUID}/${packageName}`
+    if (!safePackageName.startsWith(PACKAGE_TEST_NAMESPACE)) {
+      throw new Error(`During tests only packages must be in ${PACKAGE_TEST_NAMESPACE}!`)
+    }
+    const packageJsonFile = JSON.stringify(
+      createPackageJson(
+        safePackageName,
+        version,
+        files
+      )
     )
-  )
 
-  const createdFiles = {
-    ...createResources(resources),
-    [PACKAGE_JSON_FILENAME]: packageJsonFile,
-  }
-  const repositoryCtx: Temp = await createTmpDir(createdFiles)
+    const createdFiles = {
+      ...createResources(resources),
+      [PACKAGE_JSON_FILENAME]: packageJsonFile,
+    }
+    const repositoryCtx: Temp = await createTmpDir(createdFiles)
 
-  const createCdnPath = (): RelPath => `./${packageName.slice(1)}/${version}`
+    const createCdnPath = (): RelPath => `./${safePackageName.slice(1)}/${version}`
 
-  const packageCtx: PackageCtx = {
-    files,
-    packageName,
-    resources,
-    version,
+    const packageCtx: IPackageJson = {
+      files,
+      packageName: safePackageName,
+      resources,
+      version,
+    }
+
+    return {
+      createCdnPath,
+      packageCtx,
+      repositoryCtx,
+    }
   }
 
   return {
-    createCdnPath,
-    packageCtx,
-    repositoryCtx,
+    clearE2EtestDirectory,
+    createE2EtestPath,
+    createPackageCtx,
+    uuid: testUUID,
   }
 }
+
 
 export type { Temp }
 export {
@@ -141,7 +151,5 @@ export {
   cliErrorUnknownOption,
   cliErrorRequiredOption,
   cliErrorMissingArgument,
-  clearE2EtestDirectory,
-  createE2EtestPath,
-  createIntegrationCtx,
+  createE2EtestContext,
 }

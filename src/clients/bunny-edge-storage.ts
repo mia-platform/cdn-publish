@@ -13,11 +13,12 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
+import PQueue from 'p-queue'
+
 import type { CDN } from '../cdn.js'
 import { endsWithSlash } from '../cdn.js'
 import { errorCatcher, reject, Error } from '../error.js'
 import type { Logger } from '../logger.js'
-import { createQueue } from '../promises.js'
 import type { FileContext, LoadingContext, RelPath } from '../types.js'
 
 import { createHttpClient } from './http-client.js'
@@ -202,15 +203,14 @@ const createBunnyEdgeStorageClient = (cdn: CDN, logger: Logger): BunnyEdgeStorag
       logger.info(`Put files: ${pushedFiles}/${pathnames.length} (${(pushedFiles * 100 / pathnames.length).toFixed(2)}%)`)
     }, 2000)
 
-    return createQueue(pathnames.map(putFile), batchSize).flush()
-      .catch(async (err) => {
-        if (isSemver) {
-          return restore(scope)
-            .then(() => Promise.reject(err))
-        }
-
-        return Promise.reject(err)
-      })
+    const queue = new PQueue({ concurrency: Number(batchSize) })
+    return queue.addAll(pathnames.map(putFile)).catch(async (err) => {
+      if (isSemver) {
+        return restore(scope)
+          .then(() => Promise.reject(err))
+      }
+      return Promise.reject(err)
+    })
       .then(() => { /* noop */ })
       .finally(() => clearInterval(log))
   }

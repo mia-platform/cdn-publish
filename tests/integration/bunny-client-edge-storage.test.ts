@@ -249,7 +249,7 @@ describe('E2E: bunny edge storage cdn client', () => {
     })
 
     // bunnyCdn bug needs time to remove the file, added the sleep to make test robust
-    await setTimeout(500)
+    await setTimeout(1000)
     await expect(client.list(cdnPath))
       .to.eventually.be.fulfilled.and.to.have.length(0)
 

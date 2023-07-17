@@ -615,6 +615,7 @@ __metadata:
     "@types/isomorphic-fetch": ^0.0.36
     "@types/mocha": ^10.0.1
     "@types/node": ^20.3.2
+    "@types/p-queue": ^3.2.1
     "@types/sinon": ^10.0.15
     "@types/sinon-chai": ^3.2.9
     "@types/temp": ^0.9.1
@@ -638,6 +639,7 @@ __metadata:
     mocha: ^10.2.0
     node-color-log: ^10.0.2
     nyc: ^15.1.0
+    p-queue: ^7.3.4
     semver-regex: ^4.0.5
     sinon: ^15.2.0
     sinon-chai: ^3.7.0
@@ -851,6 +853,15 @@ __metadata:
   version: 20.4.2
   resolution: "@types/node@npm:20.4.2"
   checksum: 99e544ea7560d51f01f95627fc40394c24a13da8f041121a0da13e4ef0a2aa332932eaf9a5e8d0e30d1c07106e96a183be392cbba62e8cf0bf6a085d5c0f4149
+  languageName: node
+  linkType: hard
+
+"@types/p-queue@npm:^3.2.1":
+  version: 3.2.1
+  resolution: "@types/p-queue@npm:3.2.1"
+  dependencies:
+    p-queue: "*"
+  checksum: 7efb260e0a25e37314f63e3379a584336aac2e5662b9a740336c801e2f3917f36c981b737e8526360baf844c22b086a0097d311c32a58cd5adbe92d4b0e3a007
   languageName: node
   linkType: hard
 
@@ -2429,6 +2440,13 @@ __metadata:
   version: 2.0.3
   resolution: "esutils@npm:2.0.3"
   checksum: 22b5b08f74737379a840b8ed2036a5fb35826c709ab000683b092d9054e5c2a82c27818f12604bfc2a9a76b90b6834ef081edbc1c7ae30d1627012e067c6ec87
+  languageName: node
+  linkType: hard
+
+"eventemitter3@npm:^4.0.7":
+  version: 4.0.7
+  resolution: "eventemitter3@npm:4.0.7"
+  checksum: 1875311c42fcfe9c707b2712c32664a245629b42bb0a5a84439762dd0fd637fc54d078155ea83c2af9e0323c9ac13687e03cfba79b03af9f40c89b4960099374
   languageName: node
   linkType: hard
 
@@ -4165,6 +4183,23 @@ __metadata:
   dependencies:
     aggregate-error: ^3.0.0
   checksum: cb0ab21ec0f32ddffd31dfc250e3afa61e103ef43d957cc45497afe37513634589316de4eb88abdfd969fe6410c22c0b93ab24328833b8eb1ccc087fc0442a1c
+  languageName: node
+  linkType: hard
+
+"p-queue@npm:*, p-queue@npm:^7.3.4":
+  version: 7.3.4
+  resolution: "p-queue@npm:7.3.4"
+  dependencies:
+    eventemitter3: ^4.0.7
+    p-timeout: ^5.0.2
+  checksum: a21b8a4dd75f64a4988e4468cc344d1b45132506ddd2c771932d3de446d108ee68713b629e0d3f0809c227bc10eafc613edde6ae741d9f60db89b6031e40921c
+  languageName: node
+  linkType: hard
+
+"p-timeout@npm:^5.0.2":
+  version: 5.1.0
+  resolution: "p-timeout@npm:5.1.0"
+  checksum: f5cd4e17301ff1ff1d8dbf2817df0ad88c6bba99349fc24d8d181827176ad4f8aca649190b8a5b1a428dfd6ddc091af4606835d3e0cb0656e04045da5c9e270c
   languageName: node
   linkType: hard
 

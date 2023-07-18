@@ -209,7 +209,7 @@ describe('E2E: publish project', () => {
       )).to.be.eventually.fulfilled
 
       // bunnyCdn bug needs time to remove the file, added the sleep to make test robust
-      await setTimeout(500)
+      await setTimeout(1000)
 
       await expect(client.list(cdnRepositoryPath))
         .to.be.eventually.fulfilled.and.to.have.length(3)

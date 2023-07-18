@@ -94,7 +94,7 @@ cdn-release:
 
      - name: Publish to Mia CDN
        run: |
-        docker run --rm -v $PWD/dist:/dist miaplatform/cdn-publish:0.4.0 cdn -k "$STORAGE_ACCESS_KEY" -s "$STORAGE-ZONE" --project ./dist
+        docker run --rm -v $PWD/dist:/dist miaplatform/cdn-publish cdn -k "$STORAGE_ACCESS_KEY" -s "$STORAGE-ZONE" --project ./dist
 ```
 
 Or, if you are running a job with npm installed, you can simply install the cli:

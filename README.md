@@ -294,3 +294,61 @@ with options:
 - `-z`, `--zone` -- to purge only a specific zone id
 
 ![pullzone_list](./docs/img/pullzone_purge.png)
+
+## Local Development
+
+To run locally this CLI, after checkout, install dependencies by running:
+
+```shell
+# when using nvm to keep track of node version
+nvm use
+
+yarn install
+```
+
+then to run the source code:
+
+```shell
+yarn cli:run [options] [command]
+```
+
+to get help, just run:
+
+```shell
+yarn cli:run help
+```
+
+If you'd like to run the bundled CDN CLI:
+
+```shell
+yarn build
+node dist/index.cjs [options] [command]
+```
+
+### Integration tests
+
+Beside unit tests, integration tests against a test instance of mia bunny CDN
+are available when running github actions on PR merge request.
+
+If you have access, by owning the test environment access key, integration tests
+are available also locally.
+
+First initialize some environment variables, for instance by running the
+following steps:
+
+```shell
+# .env.local is gitignored
+touch .env.local
+echo -e "CDN_STORAGE_ACCESS_KEY=<CHANGE_ME>" >> .env.local
+echo -e "CDN_STORAGE_ZONE_NAME=<CHANGE_ME>" >> .env.local
+echo -e "CDN_STORAGE_BASE_URL=https://storage.bunnycdn.com" >> .env.local
+echo -e "CDN_API_BASE_URL=https://api.bunny.net" >> .env.local
+```
+
+and then run:
+
+```shell
+yarn test:integration
+```
+
+> :warning: **integration tests are not 100% stable**: you might need re-running tests multiple times, Be very careful here!

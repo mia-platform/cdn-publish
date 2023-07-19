@@ -26,7 +26,7 @@ import { createHttpClient } from './http-client.js'
 interface FileMeta {
   ArrayNumber: number
   Checksum: string | null
-  ContentType: string | ''
+  ContentType: string
   DateCreated: string
   Guid: string
   IsDirectory: boolean
@@ -57,7 +57,7 @@ interface BunnyEdgeStorageClient {
    * @param scope a relative path which must start with `./`
    * @returns the file / directory content
    */
-  get(scope: RelPath): Promise<unknown | FileMeta[]>
+  get(scope: RelPath): Promise<unknown>
   /**
    * returns the content of a remote directory on the CDN
    * @param scope a relative path which must start with `./`

@@ -41,7 +41,7 @@ export const createCommand = async (argv: string[], global: Global, logger: Logg
     .requiredOption('-k, --storage-access-key <string>', 'the key to access to edge storage API')
     .requiredOption('-s, --storage-zone-name <string>', 'which storage name to query')
     .option('-u, --base-url <string>', 'base url to make API calls to', 'https://storage.bunnycdn.com')
-    .option('-p, --project <string>', 'location of the package.json file', 'package.json')
+    .option('-p, --project <string>', 'location of the package.json file')
     .option(
       '--scope <string>',
       'scope of the package, '

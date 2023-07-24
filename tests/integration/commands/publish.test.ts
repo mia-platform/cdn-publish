@@ -157,6 +157,69 @@ describe('E2E: publish project', () => {
 
       await repositoryCtx.cleanup()
     })
+
+    it('should not push custom files if package.json found', async () => {
+      const { repositoryCtx, createCdnPath } = await createPackageCtx({ version: '3.0.0' })
+      const { repositoryCtx: otherFilesRepository } = await createPackageCtx({ resources: ['externalFile.js'] })
+      const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)
+      const externalFilePath = absoluteResolve(otherFilesRepository.name, 'externalFile.js')
+      const cdnRepositoryPath = createCdnPath()
+
+      await expect(createCommand(
+        buildCommandArguments([...baseCommand, ...baseArgs, '--project', projectPath, externalFilePath]),
+        global,
+        loggerStub
+      )).to.be.eventually.fulfilled
+
+      // Instead of 3 with external.js
+      await expect(client.list(cdnRepositoryPath))
+        .to.eventually.be.fulfilled.and.to.have.length(2)
+
+      await repositoryCtx.cleanup()
+      await otherFilesRepository.cleanup()
+    })
+  })
+
+  describe('only files without package.json', () => {
+    it('needs --scope', async () => {
+      const resources = ['a.js']
+      const { repositoryCtx } = await createPackageCtx({ resources })
+      const filesPath = resources.map(res => absoluteResolve(repositoryCtx.name, res))
+
+      await expect(createCommand(
+        buildCommandArguments([...baseCommand, ...baseArgs, ...filesPath]),
+        global,
+        loggerStub
+      )).to.be.eventually.rejectedWith('No scope was matched in package.json `name` field or in --scope')
+
+      await repositoryCtx.cleanup()
+    })
+
+    it('should push files', async () => {
+      const scope = '__test/foo/dir/files'
+      const scopeDir: RelPath = `./${scope}`
+      const resources = ['a.js', 'b.txt', 'foo', 'bar']
+      const { repositoryCtx } = await createPackageCtx({ resources })
+      const filesPath = resources.map(res => absoluteResolve(repositoryCtx.name, res))
+
+      await expect(createCommand(
+        buildCommandArguments([...baseCommand, ...baseArgs, '--scope', scope, ...filesPath]),
+        global,
+        loggerStub
+      )).to.be.eventually.fulfilled
+
+
+      try {
+        await client.list(scopeDir)
+      } catch (error) {
+        console.log(error)
+      }
+      await expect(client.list(scopeDir))
+        .to.eventually.be.fulfilled.and.to.have.length(resources.length)
+
+
+      await repositoryCtx.cleanup()
+    })
   })
 
   describe('with --override-version', () => {

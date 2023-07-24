@@ -15,6 +15,7 @@
 */
 import crypto from 'crypto'
 import fs from 'fs'
+import { basename } from 'path'
 
 import type { IPackageJson } from '@ts-type/package-dts'
 import semverRegex from 'semver-regex'
@@ -38,7 +39,6 @@ interface Options {
 
 interface PackageJsonContext {
   content: IPackageJson
-  path: AbsPath
   workingDir: AbsPath
 }
 
@@ -65,18 +65,27 @@ const getPackageJson = async (workingDir: AbsPath, project: string) => {
   }
 }
 
+const getDefaultPackageJson = (): PackageJsonContext => ({
+  content: {
+    name: '',
+    version: '',
+
+  },
+  workingDir: '/',
+})
+
 const getMatchers = (matchers: string[], ctx: PackageJsonContext) => {
-  if (!isNotEmpty(matchers)) {
-    const { content: { files = [] } } = ctx
-    return isNotEmpty(files)
-      ? files
+  const { content: { files = [] } } = ctx
+  if (!isNotEmpty(files)) {
+    return isNotEmpty(matchers)
+      ? matchers
       : thrower(
         Error.NoPackageJsonFiles,
-        `There are no files/matcher listed in the package.json file ${ctx.path}`
+        `There are no files/matcher listed in the package.json file ${ctx.workingDir}`
       )(undefined)
   }
 
-  return matchers
+  return files
 }
 
 const getScope = (input: string | undefined, ctx: PackageJsonContext) => {
@@ -96,7 +105,7 @@ const getScope = (input: string | undefined, ctx: PackageJsonContext) => {
   return nameScope
     ?? thrower(
       Error.NoPackageJsonNameScope,
-      'No scope was matched in package.json `name` field'
+      'No scope was matched in package.json `name` field or in --scope'
     )(undefined)
 }
 
@@ -147,7 +156,7 @@ const getLoaders = (workingDir: AbsPath, files: Set<AbsPath>, shouldUseChecksum:
   const mapper = (file: AbsPath): LoadingContext => ({
     absolutePath: file,
     loader: makeLoader(file, shouldUseChecksum),
-    pathname: `.${file.substring(workingDir.length)}` as RelPath,
+    pathname: workingDir === '/' ? `./${basename(file)}` : `.${file.substring(workingDir.length)}` as RelPath,
   })
 
   const [first, ...rest] = arrayOfFiles
@@ -175,7 +184,10 @@ async function publish(this: Config, matchers: string[], opts: Options) {
   })
 
   const pkgContext = await getPackageJson(workingDir, project)
-  const allMatchers = getMatchers(matchers, pkgContext)
+    .catch(() => getDefaultPackageJson())
+
+  const matchersPaths = matchers.map((matcher) => absoluteResolve('.', matcher))
+  const allMatchers = getMatchers(matchersPaths, pkgContext)
   const files = getFiles(pkgContext.workingDir, allMatchers)
   const loadingContexts = getLoaders(pkgContext.workingDir, files, shouldUseChecksum)
   const scope = getScope(inputScope, pkgContext)

@@ -74,18 +74,16 @@ const getDefaultPackageJson = (): PackageJsonContext => ({
   workingDir: '/',
 })
 
-const getMatchers = (matchers: string[], ctx: PackageJsonContext) => {
+const getMatchers = (ctx: PackageJsonContext) => {
   const { content: { files = [] } } = ctx
   if (!isNotEmpty(files)) {
-    return isNotEmpty(matchers)
-      ? matchers
-      : thrower(
-        Error.NoPackageJsonFiles,
-        `There are no files/matcher listed in the package.json file ${ctx.workingDir}`
-      )(undefined)
+    thrower(
+      Error.NoPackageJsonFiles,
+      `There are no files/matchers listed in the package.json file ${ctx.workingDir}`
+    )(undefined)
   }
 
-  return files
+  return files as [string, ...string[]]
 }
 
 const getScope = (input: string | undefined, ctx: PackageJsonContext) => {
@@ -166,7 +164,7 @@ const getLoaders = (workingDir: AbsPath, files: Set<AbsPath>, shouldUseChecksum:
   ] as [LoadingContext, ...LoadingContext[]]
 }
 
-async function publish(this: Config, matchers: string[], opts: Options) {
+async function publish(this: Config, opts: Options) {
   const { workingDir, logger } = this
   const {
     storageAccessKey,
@@ -186,8 +184,7 @@ async function publish(this: Config, matchers: string[], opts: Options) {
   const pkgContext = await getPackageJson(workingDir, project)
     .catch(() => getDefaultPackageJson())
 
-  const matchersPaths = matchers.map((matcher) => absoluteResolve('.', matcher))
-  const allMatchers = getMatchers(matchersPaths, pkgContext)
+  const allMatchers = getMatchers(pkgContext)
   const files = getFiles(pkgContext.workingDir, allMatchers)
   const loadingContexts = getLoaders(pkgContext.workingDir, files, shouldUseChecksum)
   const scope = getScope(inputScope, pkgContext)

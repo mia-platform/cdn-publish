@@ -56,21 +56,23 @@ const isOutOfScope = (workingDir: AbsPath, next: AbsPath) =>
  * absolute paths and as guard to avoid `../` access
  * @param matchers a list of exact or glob matchers like
  * `package.json` or `dist/**`
+ * @param checkScope check if the file are in the same scope
  * @returns a set of absolute paths
  */
-const getFiles = (workingDir: AbsPath, matchers: [string, ...string[]]) =>
+const getFiles = (workingDir: AbsPath, matchers: [string, ...string[]], checkScope: boolean = false) =>
   matchers.reduce<Set<AbsPath>>((allFiles, match) => {
     let iterator: IterableIterator<AbsPath>
     const absolutePath = absoluteResolve(workingDir, match)
+    const root = checkScope ? workingDir : '/'
 
     const stat = lstatSync(absolutePath, { throwIfNoEntry: false })
     if (stat?.isDirectory()) {
       iterator = getAllFilesFromDir(absolutePath)[Symbol.iterator]()
     } else {
-      iterator = globSync(match, { cwd: workingDir, nodir: true, root: workingDir })
+      iterator = globSync(match, { cwd: workingDir, nodir: true, root })
         .reduce((setOfFiles, next) => {
           const absoluteFile = absoluteResolve(workingDir, next)
-          if (isOutOfScope(workingDir, absoluteFile)) {
+          if (checkScope && isOutOfScope(workingDir, absoluteFile)) {
             throw new MysteryBoxError(
               Error.OutOfScopeFile,
               `file: ${absoluteFile} is container in the current working dir ${workingDir}`

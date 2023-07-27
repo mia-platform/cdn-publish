@@ -39,7 +39,7 @@ createCommand(process.argv, globalThis, logger)
         break
       }
     } else if (err instanceof CommanderError) {
-      // Catched by commander library
+      logger.error(err.message)
       return exit(1)
     } else {
       logger.error(`Unhandled error: ${err instanceof TypeError ? err.message : err}`)

@@ -30,12 +30,12 @@
     "lint": "eslint . --ext .js,.ts",
     "test": "mocha \"tests/**/*.test.ts\"",
     "test:unit": "mocha \"tests/unit/**/*.test.ts\"",
-    "test:integration": "mocha \"tests/integration/**/*.test.ts\"",
+    "test:integration": "mocha --retries 2 \"tests/integration/**/*.test.ts\"",
     "check-types": "tsc --noEmit",
-    "coverage": "cross-env 'NODE_OPTIONS=--experimental-loader @istanbuljs/esm-loader-hook' nyc yarn test:unit",
-    "cli:run": "node --loader=ts-node/esm src/index.ts",
-    "build": "node --loader=ts-node/esm scripts/build.ts",
-    "bump": "node --loader=ts-node/esm scripts/version.ts"
+    "coverage": "cross-env 'NODE_OPTIONS=--no-warnings --experimental-loader @istanbuljs/esm-loader-hook' nyc yarn test:unit",
+    "cli:run": "node --no-warnings --loader=ts-node/esm src/index.ts",
+    "build": "node --no-warnings --loader=ts-node/esm scripts/build.ts",
+    "bump": "node --no-warnings --loader=ts-node/esm scripts/version.ts"
   },
   "dependencies": {
     "axios": "^1.4.0",

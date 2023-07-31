@@ -61,7 +61,6 @@ async function purgeCache(this: Config, opts: OptionsPurgeCache) {
 
   return Promise.allSettled(idZones.map((id) => client.pullZone.purgeCache(id)))
     .then((responses) => {
-      let isOk = true
       const failedZoneIds: number[] = []
       logger.table(responses
         .map((res) => {
@@ -73,7 +72,6 @@ async function purgeCache(this: Config, opts: OptionsPurgeCache) {
           return { id, status }
         })
         .reduce<Record<string, unknown>[]>((lines, { id, status }) => {
-          isOk = isOk && status === 204
           if (status !== 204) {
             failedZoneIds.push(id)
           }
@@ -82,7 +80,7 @@ async function purgeCache(this: Config, opts: OptionsPurgeCache) {
         }, [])
       )
 
-      return isOk
+      return failedZoneIds.length === 0
         ? Promise.resolve()
         : Promise.reject(
           new MysteryBoxError(

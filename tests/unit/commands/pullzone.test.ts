@@ -163,7 +163,7 @@ describe('pullzone purge', () => {
       expect(postApiCall).to.be.equal(2)
     })
 
-    it('should not crash if one zone fails', async function (this: Context) {
+    it('should crash if one zone fails', async function (this: Context) {
       if (this.test?.sandbox === undefined) {
         throw new TypeError('Cannot find sandbox')
       }
@@ -203,7 +203,7 @@ describe('pullzone purge', () => {
         buildCommandArguments([...baseCommand, ...baseArgs]),
         global,
         loggerStub
-      )).to.be.eventually.fulfilled
+      )).to.be.eventually.rejected
 
       expect(getApiCall).to.be.equal(1)
       expect(postApiCall).to.be.equal(2)

@@ -16,6 +16,7 @@
 import { createCdnContext } from '../cdn.js'
 import type { FailedPurgeCache, PullZonePurgeCacheResponse } from '../clients/bunny-api.js'
 import { creatBunnyApiClient } from '../clients/bunny-api.js'
+import MysteryBoxError, { Error } from '../error.js'
 import type { Config } from '../types'
 
 interface PullzoneOptions {
@@ -58,9 +59,10 @@ async function purgeCache(this: Config, opts: OptionsPurgeCache) {
   const client = creatBunnyApiClient(cdn, logger)
   const idZones = zone ? [zone] : (await client.pullZone.list()).map(({ Id }) => Id)
 
-
   return Promise.allSettled(idZones.map((id) => client.pullZone.purgeCache(id)))
     .then((responses) => {
+      let isOk = true
+      const failedZoneIds: number[] = []
       logger.table(responses
         .map((res) => {
           if (res.status === 'rejected') {
@@ -70,8 +72,26 @@ async function purgeCache(this: Config, opts: OptionsPurgeCache) {
           const { id, status } = res.value as PullZonePurgeCacheResponse
           return { id, status }
         })
-        .map(({ id, status }) => ({ idZone: id, purged: `${status === 204 ? 'Ok' : 'Error'} (${status})` }))
+        .reduce<Record<string, unknown>[]>((lines, { id, status }) => {
+          isOk = isOk && status === 204
+          if (status !== 204) {
+            failedZoneIds.push(id)
+          }
+          lines.push({ idZone: id, purged: `${status === 204 ? 'Ok' : 'Error'} (${status})` })
+          return lines
+        }, [])
       )
+
+      return isOk
+        ? Promise.resolve()
+        : Promise.reject(
+          new MysteryBoxError(
+            Error.ResponseNotOk,
+            'somthing went wrong while attempting to purge zones'
+              + `with id${failedZoneIds.length < 2 ? '' : 's'} `
+              + `${failedZoneIds.map(id => `'${String(id)}'`).join(', ')}`
+          )
+        )
     })
 }
 

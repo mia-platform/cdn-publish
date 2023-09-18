@@ -33,16 +33,15 @@
     "test:integration": "mocha \"tests/integration/**/*.test.ts\"",
     "check-types": "tsc --noEmit",
     "coverage": "cross-env 'NODE_OPTIONS=--experimental-loader @istanbuljs/esm-loader-hook' nyc yarn test:unit",
-    "cli:run": "ts-node --esm src/index.ts",
-    "build": "ts-node --esm scripts/build.ts",
-    "bump": "ts-node --esm scripts/version.ts"
+    "cli:run": "node --loader=ts-node/esm src/index.ts",
+    "build": "node --loader=ts-node/esm scripts/build.ts",
+    "bump": "node --loader=ts-node/esm scripts/version.ts"
   },
   "dependencies": {
     "axios": "^1.4.0",
     "basic-ftp": "^5.0.3",
     "commander": "^11.0.0",
     "glob": "^10.3.0",
-    "isomorphic-fetch": "^3.0.0",
     "node-color-log": "^10.0.2",
     "p-queue": "^7.3.4",
     "semver-regex": "^4.0.5"

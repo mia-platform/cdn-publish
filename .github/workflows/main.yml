@@ -3,7 +3,7 @@ name: Main
 env:
   context: "./"
   cache-name: cache-release
-  node-version: 16.x
+  node-version: 18.x
 
 on:
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [16.x, 18.x]
+        node-version: [18.x, 20.x]
     needs:
       - prepare
     uses: mia-platform/cdn-publish/.github/workflows/unit-tests.yml@main
@@ -43,7 +43,7 @@ jobs:
       max-parallel: 1
       fail-fast: false
       matrix:
-        node-version: [16.x, 18.x]
+        node-version: [18.x, 20.x]
     needs:
       - prepare
     uses: mia-platform/cdn-publish/.github/workflows/integration-tests.yml@main

@@ -1,5 +1,4 @@
 import path from 'path'
-import 'isomorphic-fetch'
 
 import dotenv from 'dotenv'
 

@@ -1,8 +1,8 @@
 /* eslint-disable sort-keys-fix/sort-keys-fix */
 const path = require('path')
 
-const moduleConfig = require('eslint-plugin-n/lib/configs/recommended-module')
-const scriptConfig = require('eslint-plugin-n/lib/configs/recommended-script')
+const moduleConfig = require('eslint-plugin-n/lib/configs/recommended-module').eslintrc
+const scriptConfig = require('eslint-plugin-n/lib/configs/recommended-script').eslintrc
 const getPackageJson = require('eslint-plugin-n/lib/util/get-package-json')
 
 const packageJson = getPackageJson()

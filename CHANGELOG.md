@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.6.0] - 2023-09-21
+
 ### Added
 
 - command `update` added to push files to a remote CDN location without the npm semver PUT logic

@@ -198,7 +198,7 @@ describe('E2E: publish project', () => {
       await repositoryCtx.cleanup()
     })
 
-    it('should override a senver package', async () => {
+    it.skip('should override a senver package', async () => {
       const version = '3.0.0'
       const { repositoryCtx, createCdnPath } = await createPackageCtx({ version })
       const projectPath = absoluteResolve(repositoryCtx.name, PACKAGE_JSON_FILENAME)

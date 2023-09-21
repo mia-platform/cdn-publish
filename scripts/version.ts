@@ -66,7 +66,7 @@ const updateChangelog = async (dir: string, version: string) => {
             .trim()
             .replace(/\s/g, '')
             .toLowerCase()
-            .match(/^##unreleased/)
+            .match(/^## Unreleased/)
         )
 
       const date = new Date().toISOString()

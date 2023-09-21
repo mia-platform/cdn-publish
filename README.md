@@ -221,7 +221,7 @@ with options:
 Allows to put/patch files onto the CDN file storage service
 
 ```shell
-cdn publish [options] [files...]
+cdn publish [options]
 ```
 
 the `files` optional argument takes precedence over anything specified in the `package.json`
@@ -239,6 +239,27 @@ with options:
 - `--checksum` -- requires the [server](https://docs.bunny.net/reference/put_-storagezonename-path-filename) to fail the push if uploaded file has a checksum that does not match with the one computed on the client side.
 
 ![publish](./docs/img/publish.png)
+
+### Upload
+
+Allows to put/patch files onto the CDN file storage service
+
+```shell
+cdn upload [options] [files...]
+```
+
+the `files` are the list of files or directories to push on the cdn. It will throw an error if the folder it is not empty.
+
+with options:
+
+- `-k`, `--storage-access-key` -- **required**, the `storageZoneName` access key
+- `-s`, `--storage-zone-name` -- **required**, the `storageZoneName`
+- `-u`, `--base-url` -- the api base url, default is: `https://storage.bunnycdn.com`
+- `-b`, `--batch-size` -- number of files to be uploaded concurrently.
+- `--dest` -- a directory to prepend to all pushed files.
+- `--checksum` -- requires the [server](https://docs.bunny.net/reference/put_-storagezonename-path-filename) to fail the push if uploaded file has a checksum that does not match with the one computed on the client side.
+
+![upload](./docs/img/upload.png)
 
 ### Delete
 

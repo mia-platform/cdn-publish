@@ -8,10 +8,10 @@ import type { AffixOptions, Stats } from 'temp'
 import temp from 'temp'
 
 import type { CDN } from '../src/cdn'
-import { createBunnyEdgeStorageClient } from '../src/clients/bunny-edge-storage'
+import { createBunnyEdgeStorageClient } from '../src/clients/bunny-edge-storage.js'
 import type { AbsPath, RelPath } from '../src/types'
 
-import { CDN_TEST_FOLDER, PACKAGE_JSON_FILENAME, PACKAGE_TEST_NAMESPACE } from './consts'
+import { CDN_TEST_FOLDER, PACKAGE_JSON_FILENAME, PACKAGE_TEST_NAMESPACE } from './consts.js'
 
 interface Temp {
  cleanup: () => Promise<void | Stats>

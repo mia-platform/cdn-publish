@@ -20,6 +20,7 @@ import get from './commands/get.js'
 import list from './commands/list.js'
 import publish from './commands/publish.js'
 import pullzone from './commands/pullzone.js'
+import upload from './commands/upload.js'
 import { absoluteResolve } from './glob.js'
 import type { Logger } from './logger.js'
 import type { Global } from './types'
@@ -33,11 +34,11 @@ export const createCommand = async (argv: string[], global: Global, logger: Logg
     .name('cdn')
     .description('A client for Mia\'s CDN storage API')
     .configureOutput({
-      writeErr: (str) => logger.log(str),
+      writeErr: (str) => logger.error(str),
     })
 
   program.command('publish')
-    .description('Pushes a folder to the CDN storage')
+    .description('Pushes a npm project to the CDN storage')
     .requiredOption('-k, --storage-access-key <string>', 'the key to access to edge storage API')
     .requiredOption('-s, --storage-zone-name <string>', 'which storage name to query')
     .option('-u, --base-url <string>', 'base url to make API calls to', 'https://storage.bunnycdn.com')
@@ -62,13 +63,30 @@ export const createCommand = async (argv: string[], global: Global, logger: Logg
       'number of files to be uploaded concurrently',
       '40'
     )
+    .action(publish.bind(config))
+
+  program.command('upload')
+    .description('Uploads a folder to the CDN storage')
+    .requiredOption('-k, --storage-access-key <string>', 'the key to access to edge storage API')
+    .requiredOption('-s, --storage-zone-name <string>', 'which storage name to query')
+    .requiredOption('-d, --dest <string>', 'a directory to prepend to all pushed files')
+    .option('-u, --base-url <string>', 'base url to make API calls to', 'https://storage.bunnycdn.com')
+    .option(
+      '--checksum',
+      'will publish computing the checksum of files and could potentially fail '
+        + 'if the server disagrees with the checksum on its side'
+    )
+    .option(
+      '-b, --batch-size <number>',
+      'number of files to be uploaded concurrently',
+      '40'
+    )
     .argument(
       '[files...]',
-      'list of file matchers, '
-        + 'when no matcher is specified package.json `files` field act as fallback',
+      'list of file matchers, could be directories or files',
       []
     )
-    .action(publish.bind(config))
+    .action(upload.bind(config))
 
   program.command('list')
     .description('Retrieves the content of a folder in the CDN storage')

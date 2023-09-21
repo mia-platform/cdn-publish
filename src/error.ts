@@ -18,6 +18,7 @@ enum Error {
   ResponseNotOk,
   BodyNotOk,
   JSONParseString,
+  NoFiles,
   NoPackageJsonFiles,
   NoPackageJsonNameScope,
   InvalidURL,

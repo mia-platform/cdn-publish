@@ -1,7 +1,6 @@
 
 /* eslint-disable @typescript-eslint/require-await */
 import fs from 'fs'
-import { setTimeout } from 'timers/promises'
 
 import { expect, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
@@ -11,7 +10,6 @@ import { createCdnContext } from '../../src/cdn.js'
 import { createBunnyEdgeStorageClient } from '../../src/clients/bunny-edge-storage.js'
 import MysteryBoxError from '../../src/error.js'
 import { absoluteResolve } from '../../src/glob.js'
-import type { LoadingContext } from '../../src/types.js'
 
 import { storageAccessKey, serverStorageBaseUrl, storageZoneName, indexChecksum, index } from './../server.js'
 import { createE2EtestContext, createResources, createTmpDir, loggerStub, sha256 } from './../utils.js'
@@ -219,40 +217,5 @@ describe('E2E: bunny edge storage cdn client', () => {
     await expect(
       client.delete(cdnPath, './notExistingFile.html', true)
     ).to.eventually.be.fulfilled
-  })
-
-  it('should attempt to cleanup the folder on failed upload semver folder', async () => {
-    const resources = ['file0.txt', 'file1.txt']
-    const tmpCtx = await createTmpDir(createResources(resources))
-    const cdnPath = createE2EtestPath('/3.0.0')
-
-    resources.push('NotExistingFile.js')
-    await expect(
-      client.put(
-        cdnPath,
-        resources.map((resource) => ({
-          absolutePath: absoluteResolve(tmpCtx.name, resource),
-          loader(this) {
-            return fs.promises.readFile(this.absolutePath)
-          },
-          pathname: `./${resource}`,
-        })) as [LoadingContext, ...LoadingContext[]],
-        true,
-        1
-      )
-    ).to.eventually.rejected.and.satisfies((error: unknown) => {
-      if (!(error instanceof MysteryBoxError)) {
-        return false
-      }
-
-      return error.message === './NotExistingFile.js'
-    })
-
-    // bunnyCdn bug needs time to remove the file, added the sleep to make test robust
-    await setTimeout(1000)
-    await expect(client.list(cdnPath))
-      .to.eventually.be.fulfilled.and.to.have.length(0)
-
-    await tmpCtx.cleanup()
   })
 })

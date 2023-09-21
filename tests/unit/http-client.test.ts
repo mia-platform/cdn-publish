@@ -13,13 +13,12 @@ import sinonChai from 'sinon-chai'
 
 import { createCdnContext } from '../../src/cdn.js'
 import { createBunnyEdgeStorageClient } from '../../src/clients/bunny-edge-storage.js'
-import { createHttpClient } from '../../src/clients/http-client.js'
 import MysteryBoxError from '../../src/error.js'
 import { absoluteResolve } from '../../src/glob.js'
-import type { FileContext, LoadingContext } from '../../src/types.js'
+import type { LoadingContext } from '../../src/types.js'
 
 import { accessKey, serverStorageBaseUrl, storageZoneName } from './../server.js'
-import { createResources, createTmpDir, loggerStub, noop, sha256 } from './../utils.js'
+import { createResources, createTmpDir, loggerStub } from './../utils.js'
 
 interface Context extends MochaContext {
   currentTest?: MochaContext['currentTest'] & {sandbox?: SinonSandbox}
@@ -365,63 +364,5 @@ describe('http client tests', () => {
     })
 
     await tmpCtx.cleanup()
-  })
-})
-
-describe.skip('e2e DONT USE', () => {
-  it('e2e DONT USE', async function (this) {
-    this.timeout(100000)
-
-    const resources = Array(100).fill(0).map((_, idx) => `file${idx}.txt`)
-    const tmpCtx = await createTmpDir(createResources(resources))
-
-    const e2eAccessKey = process.env.STORAGE_ACCESS_KEY
-    if (!e2eAccessKey) {
-      throw new TypeError('must set an STORAGE_ACCESS_KEY')
-    }
-    const cdn = createCdnContext(e2eAccessKey, {
-      server: serverStorageBaseUrl,
-      storageZoneName,
-    })
-    const client = createBunnyEdgeStorageClient(cdn, loggerStub)
-
-    const loaders = resources.map((name) => ({
-      absolutePath: absoluteResolve(tmpCtx.name, name),
-      loader(this): Promise<FileContext> {
-        return fs.promises.readFile(this.absolutePath)
-          .then((buffer) => ({
-            buffer,
-            checksum: sha256(buffer),
-          }))
-      },
-      pathname: `./${name}`,
-    } as LoadingContext)) as [LoadingContext, ...LoadingContext[]]
-
-    await client.put('./backoffice/__test/files', loaders)
-
-    await tmpCtx.cleanup().then(noop)
-  })
-
-  it('e2e DONT USE', async function (this) {
-    this.timeout(100000)
-    // nock.enableNetConnect()
-
-    const e2eAccessKey = process.env.STORAGE_ACCESS_KEY
-    if (!e2eAccessKey) {
-      throw new TypeError('must set an STORAGE_ACCESS_KEY')
-    }
-
-    const cdn = createCdnContext(e2eAccessKey, {
-      server: serverStorageBaseUrl,
-      storageZoneName,
-    })
-    const client = createHttpClient({
-      baseURL: cdn.baseURL.href,
-      headers: {
-        AccessKey: e2eAccessKey,
-      },
-    })
-
-    await client.delete('./backoffice/__test/files/')
   })
 })

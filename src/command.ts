@@ -34,7 +34,7 @@ export const createCommand = async (argv: string[], global: Global, logger: Logg
     .name('cdn')
     .description('A client for Mia\'s CDN storage API')
     .configureOutput({
-      writeErr: (str) => logger.log(str),
+      writeErr: (str) => logger.error(str),
     })
 
   program.command('publish')

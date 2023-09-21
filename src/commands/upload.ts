@@ -14,15 +14,20 @@
   limitations under the License.
 */
 
+import crypto from 'crypto'
 import fs from 'fs'
 import { basename } from 'path'
 
-import { sha256 } from '../../tests/utils.js'
 import { createCdnContext } from '../cdn.js'
 import { createBunnyEdgeStorageClient } from '../clients/bunny-edge-storage.js'
 import { Error, thrower } from '../error.js'
 import { getFiles } from '../glob.js'
 import type { AbsPath, Config, LoadingContext, RelPath } from '../types'
+
+const sha256 = (content: Buffer) => crypto
+  .createHash('sha256')
+  .update(content)
+  .digest('hex')
 
 const isNotEmpty = <T extends string>(input: T[]): input is [T, ...T[]] =>
   typeof input[0] === 'string'

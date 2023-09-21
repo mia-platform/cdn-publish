@@ -66,18 +66,22 @@ const updateChangelog = async (dir: string, version: string) => {
             .trim()
             .replace(/\s/g, '')
             .toLowerCase()
-            .match(/^## Unreleased/)
+            .match(/^##\[?unreleased\]?$/)
         )
 
       const date = new Date().toISOString()
       const tIndex = date.indexOf('T')
 
-      const output = lines
-        .slice(0, unreleasedLine + 1)
-        .concat('')
-        .concat(`## [${version}] - ${date.slice(0, tIndex)}`)
-        .concat('')
-        .concat(lines.slice(unreleasedLine + 2))
+      const output = lines.reduce<string[]>((acc, next, idx) => {
+        acc.push(next)
+        if (idx === unreleasedLine) {
+          acc.push('')
+          acc.push(`## [${version}] - ${date.slice(0, tIndex)}`)
+        }
+
+        return acc
+      }, [])
+
       return fs.promises.writeFile(changelogPath, output.join('\n'))
     })
     .then(() => changelogPath)
@@ -106,6 +110,7 @@ const main = async () => {
   const files = [
     path.resolve(workingDir, 'package.json'),
     path.resolve(workingDir, 'yarn.lock'),
+    path.resolve(workingDir, '.yarn', 'versions'),
     changelogPath,
   ].filter(Boolean) as string[]
 

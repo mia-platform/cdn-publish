@@ -1013,11 +1013,11 @@ __metadata:
   linkType: hard
 
 "@types/temp@npm:^0.9.2":
-  version: 0.9.2
-  resolution: "@types/temp@npm:0.9.2"
+  version: 0.9.3
+  resolution: "@types/temp@npm:0.9.3"
   dependencies:
     "@types/node": "*"
-  checksum: 371d2e67ba86592332c5b59719806f4977eb84a8bbd469fb11064df6262c2115c2d99ee86f165e009c3dbd193ddc419b2cb5fe1036eb9135b65acb78d156d655
+  checksum: fe1907578369409db4728f2996343bbcce8d96dd8ec8126e7b907a7a8b86862bb8b842154575798be0594c3a4a6d83db65edc8dde6828eec1d700b26fa5d09ac
   languageName: node
   linkType: hard
 

@@ -744,7 +744,7 @@ __metadata:
     eslint-plugin-typescript-sort-keys: ^3.0.0
     glob: ^10.3.10
     mocha: ^10.2.0
-    node-color-log: ^10.0.2
+    node-color-log: ^12.0.0
     nyc: ^15.1.0
     p-queue: ^7.4.1
     semver-regex: ^4.0.5
@@ -1090,16 +1090,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/scope-manager@npm:6.7.4":
-  version: 6.7.4
-  resolution: "@typescript-eslint/scope-manager@npm:6.7.4"
-  dependencies:
-    "@typescript-eslint/types": 6.7.4
-    "@typescript-eslint/visitor-keys": 6.7.4
-  checksum: 8475d28f6408c204fb6bf25df45c1f16cad950190e31346c4b1ae15461a96f30b31b6fd1d3d635b41db6aa9a3fd3de25f04823632c74eeea478f34ebd134a1b0
-  languageName: node
-  linkType: hard
-
 "@typescript-eslint/type-utils@npm:6.19.1":
   version: 6.19.1
   resolution: "@typescript-eslint/type-utils@npm:6.19.1"
@@ -1128,13 +1118,6 @@ __metadata:
   version: 6.19.1
   resolution: "@typescript-eslint/types@npm:6.19.1"
   checksum: 598ce222b59c20432d06f60703d0c2dd16d9b2151569c192852136c57b8188e3ef6ef9fddaa2c136c9a756fcc7d873c0e29ec41cfd340564842287ef7b4571cd
-  languageName: node
-  linkType: hard
-
-"@typescript-eslint/types@npm:6.7.4":
-  version: 6.7.4
-  resolution: "@typescript-eslint/types@npm:6.7.4"
-  checksum: 287ae48a2bb722b866460bcb2ba4ff908348145b3fc0af4ea75679d474e9ba3632bf64689044f181fe8ca3cb5f41238bb31ea428d5e78f1c3982f6dac6b7b149
   languageName: node
   linkType: hard
 
@@ -1172,24 +1155,6 @@ __metadata:
     typescript:
       optional: true
   checksum: fb71a14aeee0468780219c5b8d39075f85d360b04ccd0ee88f4f0a615d2c232a6d3016e36d8c6eda2d9dfda86b4f4cc2c3d7582940fb29d33c7cf305e124d4e2
-  languageName: node
-  linkType: hard
-
-"@typescript-eslint/typescript-estree@npm:6.7.4":
-  version: 6.7.4
-  resolution: "@typescript-eslint/typescript-estree@npm:6.7.4"
-  dependencies:
-    "@typescript-eslint/types": 6.7.4
-    "@typescript-eslint/visitor-keys": 6.7.4
-    debug: ^4.3.4
-    globby: ^11.1.0
-    is-glob: ^4.0.3
-    semver: ^7.5.4
-    ts-api-utils: ^1.0.1
-  peerDependenciesMeta:
-    typescript:
-      optional: true
-  checksum: 2e8f5e972403233522eff09cfe7a0a23549cfd462e82b434aa32ddbdba5b329be5a549514a157f6b79e2d0159c9348d23b202e5d915d4f2c7cbfe72e1a48a429
   languageName: node
   linkType: hard
 
@@ -1245,16 +1210,6 @@ __metadata:
     "@typescript-eslint/types": 6.19.1
     eslint-visitor-keys: ^3.4.1
   checksum: bdf057a42e776970a89cdd568e493e3ea7ec085544d8f318d33084da63c3395ad2c0fb9cef9f61ceeca41f5dab54ab064b7078fe596889005e412ec74d2d1ae4
-  languageName: node
-  linkType: hard
-
-"@typescript-eslint/visitor-keys@npm:6.7.4":
-  version: 6.7.4
-  resolution: "@typescript-eslint/visitor-keys@npm:6.7.4"
-  dependencies:
-    "@typescript-eslint/types": 6.7.4
-    eslint-visitor-keys: ^3.4.1
-  checksum: 34d09798b6c48dc059e88c6cb3df5f96e859bd65d1dd05d907b8a3c7a5708a737d50607081fb14a4b974b90cfe4169a93db974bf53af8b282420187f73b0afac
   languageName: node
   linkType: hard
 
@@ -4126,10 +4081,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-color-log@npm:^10.0.2":
-  version: 10.0.2
-  resolution: "node-color-log@npm:10.0.2"
-  checksum: f0e8ee38c5934758c2101bcdf339cd6a07a86bf6e7eb22b6458e31cf590256894e73a9494e976e07c700ba0bf756aa8452625f5fdeb30e13b2c34327530a3445
+"node-color-log@npm:^12.0.0":
+  version: 12.0.0
+  resolution: "node-color-log@npm:12.0.0"
+  checksum: 26053c7e561e060c36a64efcf64877f991b3d9b277381dac07acdc1870d5a473e8703eb6f9bbe5968a04c3b13f91012b3810aa9e3110245cd38885f56d3ecce5
   languageName: node
   linkType: hard
 

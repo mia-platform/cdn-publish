@@ -1,0 +1,23 @@
+name: Pull Request on Main
+
+on:
+  push:
+    branches:
+      - rs
+
+jobs:
+  lint:
+    name: Format And Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - run: rustup component add rustfmt clippy
+      - name: check rustfmt
+        run: cargo fmt -- --check --color always
+
+      - run: cargo fetch
+      - name: cargo clippy
+        run: cargo clippy --all-targets -- -D warnings

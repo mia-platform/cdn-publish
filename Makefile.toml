@@ -1,0 +1,141 @@
+###########
+# Windows #
+###########
+
+[tasks.windows_init]
+script_runner = "powershell"
+script_extension = "ps1"
+script = '''
+$secretsFolder = ".\tests\.secrets"
+New-Item -ItemType Directory -Force -Path $secretsFolder
+
+$envJson = @"
+{"CDN_STORAGE_API_KEY":"$args","CDN_ZONE_NAME":"mia-platform-test"}
+"@
+
+$filePath = "$secretsFolder\env.json"
+$envJson | Out-File -FilePath $filePath -Encoding utf8
+'''
+
+[tasks.windows_store_remote_dir]
+workspace = false
+script_runner = "powershell"
+script_extension = "ps1"
+script = '''
+$secretsFolder = ".\tests\.secrets"
+New-Item -ItemType Directory -Force -Path $secretsFolder
+
+$randomString = [System.Guid]::NewGuid().ToString()
+$filePath = "$secretsFolder\tests.env"
+$randomString | Out-File -FilePath $filePath -Encoding ASCII
+
+Write-Host "Random string generated and saved to $filePath"
+'''
+
+[tasks.windows_delete_remote_dir]
+script_runner = "powershell"
+script_extension = "ps1"
+script = '''
+$secretsFolder = ".\tests\.secrets"
+
+$jsonFilePath = "$secretsFolder\env.json"
+$jsonContent = Get-Content $jsonFilePath | ConvertFrom-Json
+foreach ($key in $jsonContent.PSObject.Properties.Name) {
+    $value = $jsonContent.$key
+    [System.Environment]::SetEnvironmentVariable($key, $value, 'Process')
+}
+
+$randomString = Get-Content -Path "$secretsFolder\tests.env"
+$randomString = $randomString.Trim()
+$url = "https://storage.bunnycdn.com/$Env:CDN_ZONE_NAME/__test/$randomString/"
+$headers = @{
+    "AccessKey" = "$Env:CDN_STORAGE_API_KEY"
+}
+
+Write-Host "deleting at $url"
+Invoke-RestMethod -Method Delete -Headers $headers -Uri $url
+'''
+
+########
+# Unix #
+########
+
+[tasks.unix_init]
+script = '''
+localFolder=".secrets"
+mkdir -p "$localFolder"
+
+secretsFolder="tests/.secrets"
+mkdir -p "$secretsFolder"
+
+CDN_STORAGE_API_KEY="${@}"
+
+cat <<EOF > $secretsFolder/env.json
+{
+  "CDN_STORAGE_API_KEY": "$CDN_STORAGE_API_KEY",
+  "CDN_ZONE_NAME": "mia-platform-test"
+}
+
+EOF
+
+cat <<EOF > $localFolder/.env
+CDN_STORAGE_API_KEY='${@}'
+CDN_ZONE_NAME='mia-platform-test'
+EOF
+
+'''
+
+[tasks.unix_store_remote_dir]
+script = '''
+secretsFolder="./tests/.secrets"
+mkdir -p "$secretsFolder"
+
+randomString=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+filePath="$secretsFolder/tests.env"
+echo -n "$randomString" > "$filePath"
+
+echo "Random string generated and saved to $filePath"
+'''
+
+[tasks.unix_delete_remote_dir]
+script = '''
+random_string=`cat tests/.secrets/tests.env`
+cdn_storage_api_key=`cat tests/.secrets/env.json| jq -r '.CDN_STORAGE_API_KEY'`
+url="https://storage.bunnycdn.com/mia-platform-test/__test/$random_string/"
+curl --fail -X DELETE -H "AccessKey: $cdn_storage_api_key" $url
+
+echo "deleting at $url"
+'''
+
+[tasks.setup_tests]
+workspace = false
+run_task = [
+    { name = "windows_store_remote_dir", condition = { platforms = ["windows"] } },
+    { name = "unix_store_remote_dir" }
+]
+
+[tasks.teardown_tests]
+workspace = false
+run_task = [
+    { name = "windows_delete_remote_dir", condition = { platforms = ["windows"] } },
+    { name = "unix_delete_remote_dir" }
+]
+
+[tasks.e2e_tests]
+workspace = false
+command = "cargo"
+args = ["test", "--test", "*", "--", "${@}"]
+
+[tasks.e2e]
+workspace = false
+dependencies = ["setup_tests"]
+run_task = { name = [
+  "e2e_tests",
+], fork = true, cleanup_task = "teardown_tests" }
+
+[tasks.cdn_init]
+workspace = false
+run_task = [
+    { name = "windows_init", condition = {platforms = ["windows"]} },
+    { name = "unix_init" }
+]

@@ -1,5 +1,11 @@
 # CDN publish
 
+## Local Development
+
+### Unix
+
+### Windows
+
 _CDN publish_ is a Node.js bin CLI to manage files on Mia's instance of the [bunny.net](https://bunny.net) global CDN
 storage service.
 

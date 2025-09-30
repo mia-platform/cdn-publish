@@ -26,19 +26,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          show-progress: false
 
       - name: Use Node.js ${{ inputs.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ inputs.node-version }}
-          cache: yarn
+          check-latest: true
 
       - name: Install
         run: yarn install --immutable
 
       - name: Build Cache
-        uses: actions/cache@v3
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         id: build-cache
         with:
           path: |
@@ -52,17 +54,17 @@ jobs:
           echo "tag=${DOCKER_IMAGE}:${{ inputs.version }}" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           username: ${{ secrets.username }}
           password: ${{ secrets.token }}
 
       - name: Build and push
         if: ${{ inputs.push }}
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: ./
           file: ./.docker/Dockerfile

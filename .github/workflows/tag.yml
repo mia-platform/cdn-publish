@@ -64,6 +64,7 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
           check-latest: true
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install
         run: yarn install --immutable

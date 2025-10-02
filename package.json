@@ -19,13 +19,17 @@
   ],
   "type": "module",
   "bin": {
-    "cdn": "./dist/index.cjs"
+    "cdn": "dist/index.cjs"
   },
   "files": [
     "dist",
     ".docker",
     "package.json"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mia-platform/cdn-publish.git"
+  },
   "scripts": {
     "lint": "eslint . --ext .js,.ts",
     "test": "mocha \"tests/**/*.test.ts\"",
